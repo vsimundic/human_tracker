@@ -20,3 +20,7 @@ This repository is forked from: https://github.com/ros-industrial/human_tracker
 
 **Added**
 It is still in developing stage and probably won't work on other computers without changing the source code in some places. Even though this method for detecting and tracking humans was made for ROS Fuerte, core parts were catkinized and modified for ROS Kinetic. If the method is used for further research and implementation, original creators will be credited in all of the articles and works.
+
+OpenCV2 is still the library to go in this method (2.4.9 specifically), but will be migrated to OpenCV3, hopefully.
+
+When building with `catkin_make`, first build roi_msgs package by typing `catkin_make --pkg roi_msgs` because other packages depend on it and the build will fail. 
