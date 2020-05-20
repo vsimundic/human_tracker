@@ -81,13 +81,13 @@ class consistencyNode
 	ros::NodeHandle node_;
 	
 	// Subscribe to Messages
-	message_filters::Subscriber<Image> sub_disparity_;
+	message_filters::Subscriber<DisparityImage> sub_disparity_;
 	message_filters::Subscriber<Image> sub_image_;
 	message_filters::Subscriber<Rois> sub_rois_;
 	
 	// Define the Synchronizer
-	typedef ApproximateTime<Image, Image, Rois> ApproximatePolicy;
-	typedef ApproximateTime<Image, Image> ApproximatePolicy2;
+	typedef ApproximateTime<Image, DisparityImage, Rois> ApproximatePolicy;
+	typedef ApproximateTime<Image, DisparityImage> ApproximatePolicy2;
 	typedef message_filters::Synchronizer<ApproximatePolicy> ApproximateSync;
 	typedef message_filters::Synchronizer<ApproximatePolicy2> ApproximateSync2;
 	boost::shared_ptr<ApproximateSync> approximate_sync_;
@@ -120,7 +120,7 @@ class consistencyNode
 		// Published Messages
 		pub_rois_           = node_.advertise<Rois>("ConsistencyOutputRois",qs);
 		pub_Color_Image_    = node_.advertise<Image>("ConsistencyColorImage",qs);
-		pub_Disparity_Image_= node_.advertise<Image>("ConsistencyDisparityImage",qs);
+		pub_Disparity_Image_= node_.advertise<DisparityImage>("ConsistencyDisparityImage",qs);
 		
 		// Subscribe to Messages
 		sub_image_.subscribe(node_,"Color_Image",qs);
@@ -195,7 +195,7 @@ class consistencyNode
 		}
 		
 	}
-	void imageCb2(const ImageConstPtr& image_msg, const ImageConstPtr& disparity_msg)
+	void imageCb2(const ImageConstPtr& image_msg, const DisparityImageConstPtr& disparity_msg)
 	{
 		// ROS_ERROR("Uso sam u imageCb2");
 		RoisPtr P(new Rois);
@@ -218,7 +218,7 @@ class consistencyNode
 		imageCb(image_msg,disparity_msg,P);
 	}
 	
-	void imageCb(const ImageConstPtr& image_msg, const ImageConstPtr& disparity_msg, const RoisConstPtr& rois_msg)
+	void imageCb(const ImageConstPtr& image_msg, const DisparityImageConstPtr& disparity_msg, const RoisConstPtr& rois_msg)
 	{
 		// ROS_ERROR("Uso sam u imageCb");
 		
@@ -241,20 +241,22 @@ class consistencyNode
 		// ROS_ERROR("cv_bridge exception: %s", e.what());
 		// ROS_ERROR("PRRRRRRA!");
 		// ROS_ERROR("%s", image_msg->encoding.c_str());
+		
 		// Image img;
-		// img.header = image_msg->header;
-		// img.height = image_msg->height;
-		// img.width = image_msg->width;
-		// img.is_bigendian = image_msg->is_bigendian;
-		// img.step = image_msg->step;
-		// img.data = image_msg->data;
-		// img.encoding = sensor_msgs::image_encodings::BGR8;
+		// img.header = disparity_msg->header;
+		// img.height = disparity_msg->height;
+		// img.width = disparity_msg->width;
+		// img.is_bigendian = disparity_msg->is_bigendian;
+		// img.step = disparity_msg->step;
+		// img.data = disparity_msg->data;
+		// img.encoding = sensor_msgs::image_encodings::TYPE_32FC1;
 		
 		// ROS_ERROR("ENCODING JE ZAJEBANOO!");
 		// cv_color = toCvCopy(img);
 		sensor_msgs::CvBridge bridge;
 		
 		IplImage* ipl_im = bridge.imgMsgToCv(image_msg, "bgr8");
+		// IplImage* ipl_imD = bridge.imgMsgToCv(disparity_msg->image, sensor_msgs::image_encodings::TYPE_32FC1);
 		
 		// ROS_ERROR("ENCODING NIJE ZAJEBANOO!");
 		
@@ -262,15 +264,18 @@ class consistencyNode
 		
 		// ROS_ERROR("Aaaa");
 		// ROS_ERROR("Disparity image encoding = '%s'", disparity_msg->encoding.c_str());
-		// ROS_ERROR(disparity_msg->encoding == sensor_msgs::image_encodings::TYPE_32FC1);
-		assert(disparity_msg->encoding == sensor_msgs::image_encodings::TYPE_32FC1);
+		// ROS_ERROR(disparity_msg->image.encoding == sensor_msgs::image_encodings::TYPE_32FC1);
+		assert(disparity_msg->image.encoding == sensor_msgs::image_encodings::TYPE_32FC1);
 		// ROS_ERROR("BALABLBALABALBALBALAB.");
-		cv::Mat_<float> dmat(disparity_msg->height, disparity_msg->width, (float*) &disparity_msg->data[0], disparity_msg->step);
+		// cv::Mat_<float> dmat(img.height, img.width, img.data, img.step);
 		
 		// **********************************************************************//
 		// between these comments lies a hack that accounts for the difference   //
 		// between the focal lengths of the kinect's color camera and ir cameras //
 		// TODO, account for this using proper calibration and projection        //
+		// cv::Mat dmat = cv::Mat(ipl_imD);
+		cv::Mat_<float> dmat(disparity_msg->image.height, disparity_msg->image.width, (float*) &disparity_msg->image.data[0], disparity_msg->image.step);
+		
 		if(kinect_disparity_fix){
 			int nrows = 434;
 			int ncols = 579;
@@ -295,6 +300,7 @@ class consistencyNode
 				}
 			}
 		}
+		
 		// **********************************************************************//
 		
 		//load ROS rois.msg data into vector of CvRect and labels for Classifier to use
@@ -314,9 +320,11 @@ class consistencyNode
 		
 		// pass Color and Disparity Image to consistency object
 		con_.color_image=cv::Mat(ipl_im);
+		
+		// con_.disparity_image=cv::Mat(ipl_imD);
 		con_.disparity_image=dmat;
-		// delete ipl_im;
-		// ipl_im = NULL;
+
+
 		// do the work of the callback
 		if(con_.mode.compare("detect") == 0){
 			con_.detect();

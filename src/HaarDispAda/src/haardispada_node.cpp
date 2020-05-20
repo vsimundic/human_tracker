@@ -87,12 +87,12 @@ class HaarDispAdaNode
 	ros::NodeHandle node_;
 	
 	// Subscribe to Messages
-	message_filters::Subscriber<Image> sub_disparity_;
+	message_filters::Subscriber<DisparityImage> sub_disparity_;
 	message_filters::Subscriber<Image> sub_image_;
 	message_filters::Subscriber<Rois> sub_rois_;
 	
 	// Define the Synchronizer
-	typedef ApproximateTime<Image, Image, Rois> ApproximatePolicy;
+	typedef ApproximateTime<Image, DisparityImage, Rois> ApproximatePolicy;
 	typedef message_filters::Synchronizer<ApproximatePolicy> ApproximateSync;
 	boost::shared_ptr<ApproximateSync> approximate_sync_;
 	
@@ -143,7 +143,7 @@ class HaarDispAdaNode
 		// Published Messages
 		pub_rois_           = node_.advertise<Rois>("HaarDispAdaOutputRois",qs);
 		pub_Color_Image_    = node_.advertise<Image>("HaarDispAdaColorImage",qs);
-		pub_Disparity_Image_= node_.advertise<Image>("HaarDispAdaDisparityImage",qs);
+		pub_Disparity_Image_= node_.advertise<DisparityImage>("HaarDispAdaDisparityImage",qs);
 		
 		// Subscribe to Messages
 		sub_image_.subscribe(node_,"Color_Image",qs);
@@ -194,7 +194,7 @@ class HaarDispAdaNode
 		}
 		return(callback_mode);
 	}
-	void imageCb(const ImageConstPtr& image_msg, const ImageConstPtr& disparity_msg, const RoisConstPtr& rois_msg){
+	void imageCb(const ImageConstPtr& image_msg, const DisparityImageConstPtr& disparity_msg, const RoisConstPtr& rois_msg){
 		
 		bool label_all;
 		vector<int> L_in;
@@ -208,8 +208,9 @@ class HaarDispAdaNode
 		double temp=0.0;
 		
 		// check encoding and create an intensity image from disparity image
-		assert(disparity_msg->encoding == image_encodings::TYPE_32FC1);
-		cv::Mat_<float> dmatrix(disparity_msg->height, disparity_msg->width, (float*) &disparity_msg->data[0], disparity_msg->step);
+		assert(disparity_msg->image.encoding == image_encodings::TYPE_32FC1);
+		// cv::Mat_<float> dmatrix(disparity_msg->height, disparity_msg->width, (float*) &disparity_msg->data[0], disparity_msg->step);
+		cv::Mat_<float> dmatrix(disparity_msg->image.height, disparity_msg->image.width, (float*) &disparity_msg->image.data[0], disparity_msg->image.step);
 		
 		if(!node_.getParam(nn + "/UseMissingDataMask",HDAC_.useMissingDataMask_)){
 			HDAC_.useMissingDataMask_ = false;

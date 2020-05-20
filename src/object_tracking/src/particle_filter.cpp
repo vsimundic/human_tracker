@@ -77,7 +77,7 @@ POSSIBILITY OF SUCH DAMAGE.
     void ParticleFilter::updateState(cv::Mat& input, double dt)
     {
       // resample();
-      ROS_ERROR("CURRENT AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+      // ROS_ERROR("CURRENT AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
       drift_diffuse_sample(dt);
       observation_density_reweight(input);
       if(!is_dead_)
@@ -90,7 +90,7 @@ POSSIBILITY OF SUCH DAMAGE.
             max = particle_model[i].weight;
             current_map_.weight = particle_model[i].weight;
             current_map_.x = particle_model[i].x.clone();
-            ROS_ERROR("CURRENT MAPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP");
+            // ROS_ERROR("CURRENT MAPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP");
           }
         }
       }

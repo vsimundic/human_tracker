@@ -81,12 +81,12 @@ class HogSvmNode
 	ros::NodeHandle node_;
 	
 	// Subscribe to Messages
-	message_filters::Subscriber<Image> sub_disparity_;
+	message_filters::Subscriber<DisparityImage> sub_disparity_;
 	message_filters::Subscriber<Image> sub_image_;
 	message_filters::Subscriber<Rois> sub_rois_;
 	
 	// Define the Synchronizer
-	typedef ApproximateTime<Image, Image, Rois> ApproximatePolicy;
+	typedef ApproximateTime<Image, DisparityImage, Rois> ApproximatePolicy;
 	typedef message_filters::Synchronizer<ApproximatePolicy> ApproximateSync;
 	boost::shared_ptr<ApproximateSync> approximate_sync_;
 	
@@ -143,7 +143,7 @@ class HogSvmNode
 		// Published Messages
 		pub_rois_= node_.advertise<Rois>("HogSvmOutputRois",qs);
 		pub_Color_Image_    = node_.advertise<Image>("HogSvmColorImage",qs);
-		pub_Disparity_Image_= node_.advertise<Image>("HogSvmDisparityImage",qs);
+		pub_Disparity_Image_= node_.advertise<DisparityImage>("HogSvmDisparityImage",qs);
 		
 		// Subscribe to Messages
 		sub_image_.subscribe(node_,"Color_Image",qs);
@@ -195,9 +195,7 @@ class HogSvmNode
 		}
 		return(callback_mode);
 	}
-	void imageCb(const ImageConstPtr& image_msg,
-		const ImageConstPtr& disparity_msg,
-		const RoisConstPtr& rois_msg){
+	void imageCb(const ImageConstPtr& image_msg, const DisparityImageConstPtr& disparity_msg, const RoisConstPtr& rois_msg){
 		
 		bool label_all;
 		vector<Rect> R_out;

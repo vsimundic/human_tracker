@@ -88,12 +88,12 @@ class HaarSvmNode
 	ros::NodeHandle node_;
 	
 	// Subscribe to Messages
-	message_filters::Subscriber<Image> sub_disparity_;
+	message_filters::Subscriber<DisparityImage> sub_disparity_;
 	message_filters::Subscriber<Image> sub_image_;
 	message_filters::Subscriber<Rois> sub_rois_;
 	
 	// Define the Synchronizer
-	typedef ApproximateTime<Image, Image, Rois> ApproximatePolicy;
+	typedef ApproximateTime<Image, DisparityImage, Rois> ApproximatePolicy;
 	typedef message_filters::Synchronizer<ApproximatePolicy> ApproximateSync;
 	boost::shared_ptr<ApproximateSync> approximate_sync_;
 	
@@ -143,7 +143,7 @@ class HaarSvmNode
 		// Published Messages
 		pub_rois_= node_.advertise<Rois>("HaarSvmOutputRois",qs);
 		pub_Color_Image_ = node_.advertise<Image>("HaarSvmColorImage",qs);
-		pub_Disparity_Image_= node_.advertise<Image>("HaarSvmDisparityImage",qs);
+		pub_Disparity_Image_= node_.advertise<DisparityImage>("HaarSvmDisparityImage",qs);
 		
 		
 		// Subscribe to Messages
@@ -195,9 +195,8 @@ class HaarSvmNode
 		}
 		return(callback_mode);
 	}
-	void imageCb(const ImageConstPtr& image_msg,
-		const ImageConstPtr& disparity_msg,
-		const RoisConstPtr& rois_msg){
+	void imageCb(const ImageConstPtr& image_msg, const DisparityImageConstPtr& disparity_msg, const RoisConstPtr& rois_msg)
+	{
 		
 		bool label_all;
 		vector<Rect> R_out;

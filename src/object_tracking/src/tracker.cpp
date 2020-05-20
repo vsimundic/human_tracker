@@ -235,14 +235,14 @@ void ParticleTrack::draw_box(cv::Mat& image, CvScalar clr)
     loc.y = current_map_.x.at<float>(1, 0);
     objectROI = xz_to_box(loc);
     cv::rectangle(image, objectROI, clr, 2);
-    ROS_ERROR("ROI SIZE: x=%f, y=%f, width=%f, height=%f", objectROI.x, objectROI.y, objectROI.width, objectROI.height);
+    // ROS_ERROR("ROI SIZE: x=%f, y=%f, width=%f, height=%f", objectROI.x, objectROI.y, objectROI.width, objectROI.height);
     if ((objectROI.x > 0) && (objectROI.y > 0)
         && (objectROI.x + objectROI.width < image.cols)
         && (objectROI.y + objectROI.height < image.rows)
 	&& objectROI.width>0 && objectROI.height>0 )
     {
-      ROS_ERROR("ROI JE U REDU, CRTAM!");
-      ROS_ERROR("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+      // ROS_ERROR("ROI JE U REDU, CRTAM!");
+      // ROS_ERROR("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
       char buffer[50];
       sprintf(buffer, "%d", (int)uid);
       cv::putText(image, std::string(buffer), cv::Point(objectROI.x, objectROI.y), FONT_HERSHEY_PLAIN, 2.0, cv::Scalar(255));

@@ -94,7 +94,7 @@ class ObjectTrackingNode
     ros::NodeHandle node_;
     
     // Subscribe to Messages
-    message_filters::Subscriber<Image> sub_disparity_;
+    message_filters::Subscriber<DisparityImage> sub_disparity_;
     message_filters::Subscriber<Image> sub_image_;
     message_filters::Subscriber<Rois> sub_rois_;
     
@@ -102,7 +102,7 @@ class ObjectTrackingNode
     message_filters::Subscriber<sensor_msgs::CameraInfo> r_camera_info_;
     
     // Define the Synchronizer
-    typedef ApproximateTime<Image, Image, Rois> ApproximatePolicy;
+    typedef ApproximateTime<Image, DisparityImage, Rois> ApproximatePolicy;
     typedef message_filters::Synchronizer<ApproximatePolicy> ApproximateSync;
     boost::shared_ptr<ApproximateSync> approximate_sync_;
     
@@ -311,7 +311,7 @@ class ObjectTrackingNode
     
     
     void imageCb(const ImageConstPtr& image_msg,
-        const ImageConstPtr& disparity_msg,
+        const DisparityImageConstPtr& disparity_msg,
         const RoisConstPtr& rois_msg){
         
         bool label_all;
@@ -343,12 +343,8 @@ class ObjectTrackingNode
 
         
         // check encoding and create an intensity image from disparity image
-        assert(disparity_msg->encoding == image_encodings::TYPE_32FC1);
-        cv::Mat disp1(disparity_msg->height,
-            disparity_msg->width,
-            CV_32F,
-            (float*) &disparity_msg->data[0],
-        disparity_msg->step);
+        assert(disparity_msg->image.encoding == image_encodings::TYPE_32FC1);
+        cv::Mat disp1(disparity_msg->image.height, disparity_msg->image.width, CV_32F, (float*) &disparity_msg->image.data[0], disparity_msg->image.step);
         disp = disp1;
 
         // Estimate angle initially to make sure it is within tolerance
@@ -409,15 +405,15 @@ class ObjectTrackingNode
         // Draw all of the boxes
         for(int i = 0; i < trackers_.size(); i++)
         {
-            ROS_ERROR("object_tracking_node: trackers_size = %d", trackers_.size());
+            // ROS_ERROR("object_tracking_node: trackers_size = %d", trackers_.size());
             trackers_[i]->draw_box(image,cv::Scalar(0,255,0));
-            ROS_ERROR("TRACKER COORDS: %d, %d", trackers_[i]->objectROI.x, trackers_[i]->objectROI.y);
+            // ROS_ERROR("TRACKER COORDS: %d, %d", trackers_[i]->objectROI.x, trackers_[i]->objectROI.y);
         }
-        if(trackers_.size()>0)
-        {
+        // if(trackers_.size()>0)
+        // {
             // ROS_ERROR("SAVING IMAGE...");
-            cv::imwrite("/home/valentin/Woo.bmp", image);
-        }
+            // cv::imwrite("/home/valentin/Woo.bmp", image);
+        // }
 
         if(show_images_)
         {
@@ -519,7 +515,7 @@ class ObjectTrackingNode
         {
             boost::lock_guard<boost::mutex> lock(task_mutex_);
             
-            ROS_ERROR("Finishedddddd: %d", *finished);
+            // ROS_ERROR("Finishedddddd: %d", *finished);
             trackers_[idx]->update_state(image, disp, dt); // dodano - dt_ -> dt
             (*finished)++;
             
@@ -586,22 +582,22 @@ class ObjectTrackingNode
                 vy = vy/norm*.12;
                 vz = vz/norm*.12;
                 
-                log_file_ << save_img_name << "," <<
-                humans.entries[i].personID << "," <<
-                humans.entries[i].personCentroidX+vx << "," <<
-                humans.entries[i].personCentroidY+vy << "," <<
-                humans.entries[i].personCentroidZ+vz << "," <<
-                humans.entries[i].personBoundingBoxTopCenterX + vx << "," <<
-                humans.entries[i].personBoundingBoxTopCenterY + vy << "," <<
-                humans.entries[i].personBoundingBoxTopCenterZ + vz << "," <<
-                humans.entries[i].Xvelocity << "," <<
-                humans.entries[i].Yvelocity << "," <<
-                humans.entries[i].Zvelocity << "," <<
-                humans.entries[i].Xsigma << "," <<
-                humans.entries[i].Ysigma << "," <<
-                humans.entries[i].Zsigma << "," <<
-                humans.entries[i].ROIwidth << "," <<
-                humans.entries[i].ROIheight << std::endl;
+                log_file_ << humans.entries[i].stamp.toNSec() << "," <<
+                    humans.entries[i].personID << "," <<
+                    humans.entries[i].personCentroidX+vx << "," <<
+                    humans.entries[i].personCentroidY+vy << "," <<
+                    humans.entries[i].personCentroidZ+vz << "," <<
+                    humans.entries[i].personBoundingBoxTopCenterX + vx << "," <<
+                    humans.entries[i].personBoundingBoxTopCenterY + vy << "," <<
+                    humans.entries[i].personBoundingBoxTopCenterZ + vz << "," <<
+                    humans.entries[i].Xvelocity << "," <<
+                    humans.entries[i].Yvelocity << "," <<
+                    humans.entries[i].Zvelocity << "," <<
+                    humans.entries[i].Xsigma << "," <<
+                    humans.entries[i].Ysigma << "," <<
+                    humans.entries[i].Zsigma << "," <<
+                    humans.entries[i].ROIwidth << "," <<
+                    humans.entries[i].ROIheight << std::endl;
             }
         }
     }
