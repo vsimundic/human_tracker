@@ -15,3 +15,8 @@ The tracking software implements a particle filter in the x-y plane, and learns 
  1.	Training each classifier using a directory filled with labeled imagery.
  1.	Running the system from a ROS bag, from a directory or live.
 
+
+This repository is forked from: https://github.com/ros-industrial/human_tracker
+
+**Added**
+It is still in developing stage and probably won't work on other computers without changing the source code in some places. Even though this method for detecting and tracking humans was made for ROS Fuerte, core parts were catkinized and modified for ROS Kinetic. If the method is used for further research and implementation, original creators will be credited in all of the articles and works.
