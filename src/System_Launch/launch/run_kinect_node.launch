@@ -1,0 +1,132 @@
+<launch>
+    
+    <arg name="classifierDir" default="Kinect"/>
+    
+    <!-- Launch the kinect -->
+    <!-- <include file="$(find openni_launch)/launch/openni.launch"/>  -->
+    
+    <!-- ### Set the visualization parameter ### -->
+    <arg name="visual" default="true"/>
+	<param name="visualization/ptcloud" type="bool" value="$(arg visual)" />
+    <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 -0.5 0.5 -0.5 0.5  world camera_rgb_optical_frame 30" />
+    <!-- Launch consisteny node -->
+    <node pkg="consistency" type="consistency_node" name="consistency">
+        <!-- mode = {accumulate,load} -->
+        <param name="Q_Size" value="2" />
+        <param name="UseDefaultRois" type="bool" value="true" />
+        <param name="mode" type="string" value="load"/>
+        <param name="label" 	 type="int"    value="1"  />
+        <param name="yaml_filename" type="string" value="$(env NIST_CLASSIFIERS)/$(arg classifierDir)/constraints.yml"/>
+        <param name="max_training_samples" type="int" value="115"/>
+        <remap from="input_rois" to="output_rois" />
+        <remap from="Color_Image" to="/camera/rgb/image_color" />
+        <remap from="Disparity_Image" to="/camera/depth_registered/disparity" />
+        <remap from="PtCloud" to="/points" />
+        <param name="Kinect_Disparity_Fix" value="true"/>	
+    </node>
+    
+    <!-- Launch HaarAda Node-->
+    <node name="HaarAdaNode" pkg="HaarAda" type="HaarAda174"  >	
+        <param name="Q_Size" value="2" />
+        <param name="RemoveOverlappingRois" type="bool" value="true" />
+        <remap from="Color_Image" to="ConsistencyColorImage"/>	
+        <remap from="Disparity_Image" to="ConsistencyDisparityImage"/>
+        <remap from="PtCloud" to="ConsistencyPtcloud" />
+        <remap from="input_rois" to="ConsistencyOutputRois"/>
+        <!--mode={detect,train,load,accumulate} -->
+        <param name="mode" value="load"/>
+        <param name="classifier_file" value="$(env NIST_CLASSIFIERS)/$(arg classifierDir)/HaarAda.xml"/>
+        <param name="num_Training_Samples" value="1000"/>
+        <param name="HaarAdaPrior" value="200.0"/>
+    </node> 
+    
+    
+    <!-- Launch HaarDispAda Node-->
+    <node name="HaarDispAdaNode" pkg="HaarDispAda" type="HaarDispAda174" >	
+        <param name="Q_Size" value="2" />
+        <remap from="Color_Image" to="HaarAdaColorImage"/>	
+        <remap from="Disparity_Image" to="HaarAdaDisparityImage"/>
+        <remap from="PtCloud" to="HaarAdaPtcloud" />
+        <remap from="input_rois" to="HaarAdaOutputRois"/>
+        <!-- mode={detect,train,load,accumulate} -->
+        <param name="mode" value="load"/>
+        <param name="classifier_file" value="$(env NIST_CLASSIFIERS)/$(arg classifierDir)/HaarDispAda.xml"/>
+        <param name="num_Training_Samples" value="1000"/>
+        <param name="HaarDispAdaPrior" value="3.0"/>
+        <param name="Kinect_Disparity_Fix" value="false"/>	
+        <param name="UseMissingDataMask" value="false"/>
+    </node> 
+    
+    
+    <!-- Launch HaarSvm Node-->
+    <node name="HaarSvmNode" pkg="HaarSvm" type="HaarSvm8" >	  
+        <param name="Q_Size" value="2" />
+        <remap from="Color_Image" to="HaarDispAdaColorImage"/>	
+        <remap from="Disparity_Image" to="HaarDispAdaDisparityImage"/>
+        <remap from="PtCloud" to="HaarDispAdaPtcloud" />
+        <remap from="input_rois" to="HaarDispAdaOutputRois"/>
+        <!-- mode={detect,train,load,accumulate} -->
+        <param name="mode" value="load"/>
+        <param name="classifier_file" value="$(env NIST_CLASSIFIERS)/$(arg classifierDir)/HaarSvm.xml"/>
+        <param name="num_Training_Samples" value="1000"/>
+        <param name="HaarSvmThreshold" value="0.3"/>
+    </node> 
+    
+    
+    <!-- Launch HogSvm Node-->
+    <node name="HogSvmNode" pkg="HogSvm" type="HogSvm1" >	
+        <param name="Q_Size" value="2" />
+        <remap from="Color_Image" to="HaarSvmColorImage"/>	
+        <remap from="Disparity_Image" to="HaarSvmDisparityImage"/>
+        <remap from="PtCloud" to="HaarSvmPtcloud" />
+        <remap from="input_rois" to="HaarSvmOutputRois"/>
+        <!-- mode={detect,train,load,accumulate} -->
+        <param name="mode" value="load"/>
+        <param name="Hog_Block_File"  value="$(env NIST_CLASSIFIERS)/$(arg classifierDir)/Blocks.xml"/>
+        <param name="classifier_file" value="$(env NIST_CLASSIFIERS)/$(arg classifierDir)/HogSvm.xml"/>
+        <param name="Ave_Roi_File" value="$(env NIST_CLASSIFIERS)/$(arg classifierDir)/AveHOGRoi.jpg"/>
+        <param name="num_Training_Samples" value="1000"/>
+        <param name="HogSvmThreshold" value="0.4"/>
+    </node> 
+    
+    <!-- display the rois -->
+    <!-- <node pkg="roiViewer" type="roiViewer_node" name="HaarAdaViewer" >
+        <param name="mode" type="string" value="roi_display"/> 
+        <param name="label" type="int" value="1" />
+        <remap from ="input_image" to="HogSvmColorImage"/>
+        <remap from ="input_rois" to="HogSvmOutputRois"/>  
+    </node> -->
+    
+    <!-- Launch Tracking Node-->
+    <node name="TrackNode" pkg="object_tracking" type="object_tracking_node" output="screen">	
+        <param name="Q_Size" value="2" />
+        <remap from="Color_Image" to="HogSvmColorImage"/>	
+        <remap from="Disparity_Image" to="HogSvmDisparityImage"/>
+        <remap from="PtCloud" to="HogSvmPtcloud" />
+        <remap from="input_rois" to="HogSvmOutputRois"/>
+        <remap from="l_camera_info" to="camera/depth_registered/camera_info"/>
+        <remap from="r_camera_info" to="camera/projector/camera_info"/>
+        <param name="Filter_Dir" value="$(find object_tracking)/perception_data" />
+        <param name="Calculate_Covariance" value="false" />
+        <param name="CSV_Filename" value="$(env NIST_RESULTS)/live.csv" />
+        <param name="Show_Images" type="bool" value="false" />
+    </node> 
+    
+    <!-- Launch Bounding Box Info Node -->
+    <node name="BboxInfoNode" pkg="bbox_info" type="bbox_info_node" output="screen">
+        <param name="Show_Images" type="bool" value="true" />
+    </node>
+    
+    <group if="$(arg visual)">
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find visualize_bbox)/rviz/visualize.rviz" />
+        
+        <node name="VisualizeBboxNode" pkg="visualize_bbox" type="visualize_bbox_node" output="screen"> 
+            <remap from="PtCloud" to="ObjTrackingPtcloud" />
+            <remap from="HumanData" to="human_tracker_data"/>
+        </node>
+    </group>
+    
+    <!-- <node name="FindDistanceNode" pkg="find_distance" type="find_distance_node" output="screen"> </node> -->
+
+    <!-- <node name="DatasetTestingNode" pkg="dataset_testing" type="dataset_testing_node" output="screen"></node> -->
+</launch>

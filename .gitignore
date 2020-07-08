@@ -1,0 +1,6 @@
+.catkin_workspace
+build/
+devel/
+.vscode/
+results/
+FERIT_dataset/
