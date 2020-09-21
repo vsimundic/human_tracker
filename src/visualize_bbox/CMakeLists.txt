@@ -16,6 +16,8 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_ros
   roi_msgs
   roscpp
+  rviz_visual_tools
+  geometry_msgs
 )
 
 find_package(OpenCV 2 REQUIRED)

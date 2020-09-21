@@ -23,6 +23,7 @@
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
 #include <stereo_msgs/DisparityImage.h>
+#include "geometry_msgs/Point.h"
 
 // Image Transport
 #include <image_transport/image_transport.h>
@@ -75,13 +76,13 @@ void entryCallback(const PointCloud2ConstPtr& cloud_msg, const HumanEntriesConst
   visualization_msgs::MarkerArray pplMarkers;
   pplMarkers.markers.clear();
 
-  ROS_ERROR("Marker count: %d", entry_msg->entries.size());
+  // ROS_ERROR("Marker count: %d", entry_msg->entries.size());
 
   // Loop through message data, create bbox markers and push on back of array
   for (int i = 0; i < entry_msg->entries.size(); i++)
   {
     visualization_msgs::Marker personMarker;
-    personMarker.id = i;
+    personMarker.id = 2 * i;
     personMarker.header.frame_id = "/world";
     personMarker.header.stamp = ros::Time::now();
 
@@ -108,8 +109,53 @@ void entryCallback(const PointCloud2ConstPtr& cloud_msg, const HumanEntriesConst
     personMarker.color.g = 1.0;
     personMarker.color.b = 0.0;
 
-    personMarker.lifetime = ros::Duration();
+    personMarker.lifetime = ros::Duration(0.25);
 
+    // velocity length
+    double x_vel = entry_msg->entries[i].Yvelocity;
+    double y_vel = -entry_msg->entries[i].Xvelocity;
+    double length_vel = sqrt(x_vel * x_vel + y_vel * y_vel);
+
+    if (length_vel > 0)
+    {
+      // x_vel /= length_vel;
+      // y_vel /= length_vel;
+
+      geometry_msgs::Point start_point;
+      geometry_msgs::Point end_point;
+
+      start_point.x = entry_msg->entries[i].personBoundingBoxTopCenterY;
+      start_point.y = -entry_msg->entries[i].personBoundingBoxTopCenterX;
+      start_point.z = -entry_msg->entries[i].personBoundingBoxTopCenterZ;
+
+      end_point.x = entry_msg->entries[i].personBoundingBoxTopCenterY + x_vel;
+      end_point.y = -entry_msg->entries[i].personBoundingBoxTopCenterX + y_vel;
+      end_point.z = -entry_msg->entries[i].personBoundingBoxTopCenterZ;
+
+      // velocity Marker
+      visualization_msgs::Marker velocityMarker;
+      velocityMarker.type = visualization_msgs::Marker::ARROW;
+      velocityMarker.action = visualization_msgs::Marker::ADD;
+      velocityMarker.id = 2 * i + 1;
+      velocityMarker.header.frame_id = "/world";
+      velocityMarker.header.stamp = ros::Time::now();
+
+      velocityMarker.ns = "velocity";
+
+      velocityMarker.points.push_back(start_point);
+      velocityMarker.points.push_back(end_point);
+
+      velocityMarker.scale.x = 0.1;
+      velocityMarker.scale.y = 0.3;
+
+      velocityMarker.color.a = 0.6;  // Don't forget to set the alpha!
+      velocityMarker.color.r = 1.0;
+      velocityMarker.color.g = 1.0;
+      velocityMarker.color.b = 0.0;
+
+      velocityMarker.lifetime = ros::Duration();
+      pplMarkers.markers.push_back(velocityMarker);
+    }
     pplMarkers.markers.push_back(personMarker);
   }
 

@@ -8,7 +8,9 @@
     <!-- ### Set the visualization parameter ### -->
     <arg name="visual" default="true"/>
 	<param name="visualization/ptcloud" type="bool" value="$(arg visual)" />
-    <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 -0.5 0.5 -0.5 0.5  world camera_rgb_optical_frame 30" />
+
+
+
     <!-- Launch consisteny node -->
     <node pkg="consistency" type="consistency_node" name="consistency">
         <!-- mode = {accumulate,load} -->
@@ -86,7 +88,7 @@
         <param name="classifier_file" value="$(env NIST_CLASSIFIERS)/$(arg classifierDir)/HogSvm.xml"/>
         <param name="Ave_Roi_File" value="$(env NIST_CLASSIFIERS)/$(arg classifierDir)/AveHOGRoi.jpg"/>
         <param name="num_Training_Samples" value="1000"/>
-        <param name="HogSvmThreshold" value="0.4"/>
+        <param name="HogSvmThreshold" value="0.7"/>
     </node> 
     
     <!-- display the rois -->
@@ -118,6 +120,13 @@
     </node>
     
     <group if="$(arg visual)">
+        <!-- publishing needed tf for dataset -->
+        <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 -0.5 0.5 -0.5 0.5  world camera_rgb_optical_frame 30" />
+    
+        <!-- nodelet for converting pointcloud -->
+        <node pkg="nodelet" type="nodelet" name="point_cloud_xyzrgb"
+            args="standalone depth_image_proc/point_cloud_xyzrgb" />
+
         <node type="rviz" name="rviz" pkg="rviz" args="-d $(find visualize_bbox)/rviz/visualize.rviz" />
         
         <node name="VisualizeBboxNode" pkg="visualize_bbox" type="visualize_bbox_node" output="screen"> 
@@ -129,4 +138,5 @@
     <!-- <node name="FindDistanceNode" pkg="find_distance" type="find_distance_node" output="screen"> </node> -->
 
     <!-- <node name="DatasetTestingNode" pkg="dataset_testing" type="dataset_testing_node" output="screen"></node> -->
+
 </launch>

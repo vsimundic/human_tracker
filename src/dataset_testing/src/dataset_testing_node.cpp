@@ -82,8 +82,8 @@ void entryImageCallback(const HumanEntriesConstPtr entries_msg)
   }
   */
 
-  log_file << entries_msg->entries.size() << "," << strStamp << "," << std::endl;
-  // log_file << entries_msg->entries.size() << "," << strStamp << "," << std::endl;
+  log_file << entries_msg->entries.size() << "," << strStamp << std::endl;
+  log_file << entries_msg->entries.size() << "," << strStamp << "," << numEntriesInRange << std::endl;
 }
 
 void onlyImageCallback(const ImageConstPtr image_msg)
