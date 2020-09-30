@@ -4,7 +4,7 @@
   <arg name="replayRate" default="5.0"/>
 
   <!-- Launch the kinect for the data -->
-  <include file="$(find kinect_data)/launch/kinect_data.launch"/> 
+  <!-- <include file="$(find kinect_data)/launch/kinect_data.launch"/>  -->
 
 
   <!-- Launch consisteny node because we need the ROIS-->
@@ -36,7 +36,7 @@
   </node> 
 
    <!-- display the rois -->
-   <node pkg="roiViewer" type="roiViewer" name="roiViewer" >
+   <node pkg="roiViewer" type="roiViewer_node" name="roiViewer" >
         <param name="mode" type="string" value="roi_display"/> 
         <param name="label" type="int" value="1" />
 	<remap from ="input_image" to="HaarAdaColorImage"/>

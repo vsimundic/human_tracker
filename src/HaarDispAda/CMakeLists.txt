@@ -18,7 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
 )
 # set(OpenCV_DIR "/home/valentin/opencv")
-find_package(OpenCV 2 REQUIRED)
+find_package(OpenCV 3 REQUIRED)
 find_package(PCL REQUIRED)
 message("OpenCV version: ${OpenCV_VERSION}")
 ## System dependencies are found with CMake's conventions
@@ -30,13 +30,13 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-set(${OpenCV_INCLUDE_DIRS}
-	/home/valentin/cv/usr/local/include
-	/home/valentin/cv/usr/local/include/opencv2
-)
-set(${OpenCV_LIB_DIR}
-  /home/valentin/cv/usr/local/lib
-)
+# set(${OpenCV_INCLUDE_DIRS}
+# 	/home/valentin/cv/usr/local/include
+# 	/home/valentin/cv/usr/local/include/opencv2
+# )
+# set(${OpenCV_LIB_DIR}
+#   /home/valentin/cv/usr/local/lib
+# )
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -75,5 +75,11 @@ add_library(${PROJECT_NAME} src/haardispada.cpp src/haardispada_nodelet.cpp)
 
 add_executable(HaarDispAda174 src/haardispada_node.cpp)
 
-target_link_libraries(HaarDispAda174 ${PROJECT_NAME} ${catkin_LIBRARIES} boost_system boost_signals ${OpenCV_LIBS} ${PCL_LIBRARIES})
+target_link_libraries(HaarDispAda174 
+${PROJECT_NAME} 
+${catkin_LIBRARIES} 
+boost_system 
+boost_signals 
+${OpenCV_LIBS} 
+${PCL_LIBRARIES})
 

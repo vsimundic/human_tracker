@@ -275,7 +275,7 @@ namespace HaarSvm
 	  ROS_ERROR("classifier_file param not set");
 	}
 	ROS_ERROR("Submitting %d Samples to Train ouput= %s",HSC_.numSamples_,cfnm.c_str());
-	HSC_.train(cfnm);
+	// HSC_.train(cfnm);
 	node_.setParam("mode", std::string("evaluate"));
 	ROS_ERROR("DONE TRAINING, switching to evaluate mode");
 	break;

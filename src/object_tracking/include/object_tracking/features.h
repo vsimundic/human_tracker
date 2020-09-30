@@ -40,6 +40,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <ml.h>
 #include <stdio.h>
 #include <string.h>
+#include <opencv2/imgproc.hpp>
 
   /**
    * @brief Calculate and store features for online learning.
@@ -66,21 +67,21 @@ POSSIBILITY OF SUCH DAMAGE.
      * @param[in] gray The input image
      * @param[in] roi The input roi
      */
-    void computePool1(cv::Mat gray, CvRect roi);
+    void computePool1(cv::Mat gray, cv::Rect roi);
 
     /**
      * @brief Compute haar sign features
      * @param[in] gray The input image
      * @param[in] roi The input roi
      */
-    void haarSignFeatures(cv::Mat gray, CvRect roi);
+    void haarSignFeatures(cv::Mat gray, cv::Rect roi);
 
     /**
      * @brief Compute the color features
      * @param[in] clr The input image
      * @param[in] roi The input roi
      */
-    void regionColorFeatures(cv::Mat clr, CvRect roi);
+    void regionColorFeatures(cv::Mat clr, cv::Rect roi);
 
     /**
      * @brief Compute maps for pool features

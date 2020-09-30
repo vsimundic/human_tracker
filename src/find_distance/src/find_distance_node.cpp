@@ -15,7 +15,7 @@
 #include <message_filters/time_synchronizer.h>
 
 // Subscribe Messages
-#include </home/valentin/cv_bridge/include/cv_bridge/CvBridge.h>
+// #include </home/valentin/cv_bridge/include/cv_bridge/CvBridge.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/Image.h>

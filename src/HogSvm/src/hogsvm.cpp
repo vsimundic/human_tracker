@@ -70,7 +70,7 @@ namespace HogSvm {
 			if(R_in[i].width > 2 && R_in[i].height > 2){
 				setImageRoi(R_in[i],I_in);
 				if(hog_features(HF)== 1){
-					result = HSC_.predict(HF,true);
+					result = HSC_->predict(HF, cv::noArray(), 0);
 				}
 				else{
 					ROS_ERROR("Couldn't compute hog features???");
@@ -157,61 +157,59 @@ namespace HogSvm {
 		
 	}
 	
-	void HogSvmClassifier::train(string filename){
-		if(!initialized_) return;
-		CvMat* cWeights = cvCreateMat(1, 2, CV_32FC1);
-		cvSet2D(cWeights, 0, 0, cvScalar(1));
-		cvSet2D(cWeights, 0, 1, cvScalar(1));
-		
-		//  add | CV_TERMCRIT_ITER to first argument if training fails
-		CvTermCriteria criteria = cvTermCriteria(CV_TERMCRIT_EPS, 100, 0.001); 
-		CvSVMParams svmparams = CvSVMParams(CvSVM::C_SVC, CvSVM::POLY, 2, 1, 1, 1,
-		0.5, 0.1, cWeights, criteria);
-		
-		// copy sub matrix for training 
-		Mat VarIdx;
-		Mat Features(numSamples_,num_features_,CV_32F);
-		for(int i=0;i<numSamples_;i++){
-			for(int j=0;j<num_features_;j++){
-				Features.at<float>(i,j) = trainingSamples_.at<float>(i,j);
-			}
-		}
-		Mat Responses(numSamples_,1,CV_32S);
-		for(int i=0; i<numSamples_;i++){
-			if(trainingLabels_.at<int>(i,0) == -1) trainingLabels_.at<int>(i,0) = 0;//classes: 0,1  not -1,1 
-			Responses.at<int>(i,0) = trainingLabels_.at<int>(i,0);
-		}
-		HSC_.train(Features, Responses,Mat(),Mat(),svmparams);
-		trained_ = true;
-		ROS_ERROR("saving trained classifier to %s",filename.c_str());
-		HSC_.save(filename.c_str());
-		if(Save_Average_Roi_){
-			Ave_Roi = Ave_Roi/num_ave_rois_;
-			Mat tmp = cv::Mat::zeros(64,64,CV_8U);
-			Ave_Roi.convertTo(tmp, CV_8U);
-			cv::imwrite(Ave_Roi_File_.c_str(),tmp);
-		}
-		// Determine Recall Statistics
-		int num_TP     = 0;
-		int num_FP     = 0;
-		int num_people = 0;
-		int num_neg    = 0;
-		int num_TN     = 0;
-		int num_FN     = 0;
-		for(int i=0;i<Features.rows;i++){
-			float result = HSC_.predict(Features.row(i),true);
-			if(Responses.at<int>(i,0) == 1) num_people++;
-			if(Responses.at<int>(i,0) != 1) num_neg++;
-			if(result<HogSvmThreshold_ && Responses.at<int>(i,0) == 1) num_TP++; // true pos
-			else if(result<HogSvmThreshold_ && Responses.at<int>(i,0) == 0) num_FP++; // false pos
-			else if(result>HogSvmThreshold_ && Responses.at<int>(i,0) == 0) num_TN++; // true neg
-			else if(result>HogSvmThreshold_ && Responses.at<int>(i,0) == 1) num_FN++; // false neg
-		}
-		float percent = (float)num_TP/(float)num_people*100.0;
-		ROS_ERROR("Recall = %6.2f%c",percent,'%');
-		percent = (float)num_FP/(float)num_neg*100.0;
-		ROS_ERROR("False Positives = %6.2f%c",percent,'%');
-	}
+	// void HogSvmClassifier::train(string filename){
+	// 	if(!initialized_) return;
+	// 	CvMat* cWeights = cvCreateMat(1, 2, CV_32FC1);
+	// 	cvSet2D(cWeights, 0, 0, cvScalar(1));
+	// 	cvSet2D(cWeights, 0, 1, cvScalar(1));
+	// 	//  add | CV_TERMCRIT_ITER to first argument if training fails
+	// 	CvTermCriteria criteria = cvTermCriteria(CV_TERMCRIT_EPS, 100, 0.001); 
+	// 	CvSVMParams svmparams = CvSVMParams(CvSVM::C_SVC, CvSVM::POLY, 2, 1, 1, 1,
+	// 	0.5, 0.1, cWeights, criteria);
+	// 	// copy sub matrix for training 
+	// 	Mat VarIdx;
+	// 	Mat Features(numSamples_,num_features_,CV_32F);
+	// 	for(int i=0;i<numSamples_;i++){
+	// 		for(int j=0;j<num_features_;j++){
+	// 			Features.at<float>(i,j) = trainingSamples_.at<float>(i,j);
+	// 		}
+	// 	}
+	// 	Mat Responses(numSamples_,1,CV_32S);
+	// 	for(int i=0; i<numSamples_;i++){
+	// 		if(trainingLabels_.at<int>(i,0) == -1) trainingLabels_.at<int>(i,0) = 0;//classes: 0,1  not -1,1 
+	// 		Responses.at<int>(i,0) = trainingLabels_.at<int>(i,0);
+	// 	}
+	// 	HSC_.train(Features, Responses,Mat(),Mat(),svmparams);
+	// 	trained_ = true;
+	// 	ROS_ERROR("saving trained classifier to %s",filename.c_str());
+	// 	HSC_.save(filename.c_str());
+	// 	if(Save_Average_Roi_){
+	// 		Ave_Roi = Ave_Roi/num_ave_rois_;
+	// 		Mat tmp = cv::Mat::zeros(64,64,CV_8U);
+	// 		Ave_Roi.convertTo(tmp, CV_8U);
+	// 		cv::imwrite(Ave_Roi_File_.c_str(),tmp);
+	// 	}
+	// 	// Determine Recall Statistics
+	// 	int num_TP     = 0;
+	// 	int num_FP     = 0;
+	// 	int num_people = 0;
+	// 	int num_neg    = 0;
+	// 	int num_TN     = 0;
+	// 	int num_FN     = 0;
+	// 	for(int i=0;i<Features.rows;i++){
+	// 		float result = HSC_.predict(Features.row(i),true);
+	// 		if(Responses.at<int>(i,0) == 1) num_people++;
+	// 		if(Responses.at<int>(i,0) != 1) num_neg++;
+	// 		if(result<HogSvmThreshold_ && Responses.at<int>(i,0) == 1) num_TP++; // true pos
+	// 		else if(result<HogSvmThreshold_ && Responses.at<int>(i,0) == 0) num_FP++; // false pos
+	// 		else if(result>HogSvmThreshold_ && Responses.at<int>(i,0) == 0) num_TN++; // true neg
+	// 		else if(result>HogSvmThreshold_ && Responses.at<int>(i,0) == 1) num_FN++; // false neg
+	// 	}
+	// 	float percent = (float)num_TP/(float)num_people*100.0;
+	// 	ROS_ERROR("Recall = %6.2f%c",percent,'%');
+	// 	percent = (float)num_FP/(float)num_neg*100.0;
+	// 	ROS_ERROR("False Positives = %6.2f%c",percent,'%');
+	// }
 	
 	void HogSvmClassifier::setMaxSamples(int n)
 	{
@@ -253,7 +251,7 @@ namespace HogSvm {
 		fs2 = FileStorage(classifier_filename_.c_str(), FileStorage::READ);
 		if (fs2.isOpened())
 		{
-			HSC_.load(classifier_filename_.c_str());      
+			HSC_ = cv::ml::StatModel::load<cv::ml::SVM>(classifier_filename_.c_str());     
 			trained_ = true;
 			fs2.release();
 		}
@@ -267,7 +265,7 @@ namespace HogSvm {
 	void HogSvmClassifier::load()
 	{
 		ROS_ERROR("loading classifier from %s",classifier_filename_.c_str());
-		HSC_.load(classifier_filename_.c_str());
+		HSC_ = cv::ml::StatModel::load<cv::ml::SVM>(classifier_filename_.c_str());     
 	}
 	
 	int HogSvmClassifier::test()

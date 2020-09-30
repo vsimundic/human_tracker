@@ -21,7 +21,7 @@
 #include <message_filters/time_synchronizer.h>
 
 // Subscribe Messages
-#include </home/valentin/cv_bridge/include/cv_bridge/CvBridge.h>
+// #include </home/valentin/cv_bridge/include/cv_bridge/CvBridge.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/Image.h>
@@ -65,7 +65,7 @@ void entryImageCallback(const HumanEntriesConstPtr entries_msg)
   str_stream << std::setprecision(17) << entries_msg->header.stamp.toSec();
   std::string strStamp = str_stream.str();
 
-  /*
+  
   int numEntriesInRange = 0;
 
   for (int i = 0; i < entries_msg->entries.size(); i++)
@@ -80,16 +80,18 @@ void entryImageCallback(const HumanEntriesConstPtr entries_msg)
     if (calcd_distance < 2.0)
       numEntriesInRange++;
   }
-  */
-
+  
   log_file << entries_msg->entries.size() << "," << strStamp << std::endl;
   log_file << entries_msg->entries.size() << "," << strStamp << "," << numEntriesInRange << std::endl;
 }
 
 void onlyImageCallback(const ImageConstPtr image_msg)
 {
-  sensor_msgs::CvBridge bridge;
-  IplImage* ipl_im = bridge.imgMsgToCv(image_msg, "passthrough");
+
+  cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::BGR8);
+
+  // sensor_msgs::CvBridge bridge;
+  // IplImage* ipl_im = bridge.imgMsgToCv(image_msg, "passthrough");
 
   std::ostringstream str_stream;
   str_stream << std::setprecision(17) << image_msg->header.stamp.toSec();
@@ -100,7 +102,7 @@ void onlyImageCallback(const ImageConstPtr image_msg)
                                                                                                              "g";
   std::cout << std::setprecision(17) << image_msg->header.stamp.toSec() << std::endl;
 
-  cv::imwrite(image_name.c_str(), cv::Mat(ipl_im));
+  cv::imwrite(image_name.c_str(), cv_ptr->image);
 }
 
 int main(int argc, char** argv)

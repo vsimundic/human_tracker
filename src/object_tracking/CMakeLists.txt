@@ -18,7 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
 )
 
-find_package(OpenCV 2 REQUIRED)
+find_package(OpenCV 3 REQUIRED)
 message("OpenCV version: ${OpenCV_VERSION}")
 find_package(PCL REQUIRED)
 
@@ -27,13 +27,13 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-set(${OpenCV_INCLUDE_DIRS}
-	/home/valentin/cv/usr/local/include
-	/home/valentin/cv/usr/local/include/opencv2
-)
-set(${OpenCV_LIB_DIR}
-  /home/valentin/cv/usr/local/lib
-)
+# set(${OpenCV_INCLUDE_DIRS}
+# 	/home/valentin/cv/usr/local/include
+# 	/home/valentin/cv/usr/local/include/opencv2
+# )
+# set(${OpenCV_LIB_DIR}
+#   /home/valentin/cv/usr/local/lib
+# )
 
 
 catkin_package(
@@ -60,7 +60,8 @@ add_library(${PROJECT_NAME}
 	src/features.cpp
 	src/forest.cpp
 	src/particle_filter.cpp
-	src/swri_tree.cpp)
+  src/swri_tree.cpp
+)
 	
 add_executable(object_tracking_node src/nodes/object_tracking_node.cpp)
 target_link_libraries(object_tracking_node ${Boost_LIBRARIES})

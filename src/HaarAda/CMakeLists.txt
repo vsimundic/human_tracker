@@ -17,10 +17,10 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
 )
-find_package(OpenCV 2 REQUIRED
-NO_MODULE
-PATHS /home/valentin/cv/usr/local
-NO_DEFAULT_PATH
+find_package(OpenCV 3 REQUIRED
+# NO_MODULE
+# PATHS /home/valentin/cv/usr/local
+# NO_DEFAULT_PATH
 )
 find_package(PCL REQUIRED)
 message("OpenCV version: ${OpenCV_VERSION}")

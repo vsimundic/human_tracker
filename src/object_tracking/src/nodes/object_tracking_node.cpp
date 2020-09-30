@@ -46,7 +46,7 @@
 #include <message_filters/synchronizer.h>
 
 // Subscribe Messages
-#include </home/valentin/cv_bridge/include/cv_bridge/CvBridge.h>
+// #include </home/valentin/cv_bridge/include/cv_bridge/CvBridge.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/Image.h>
@@ -61,6 +61,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/core/types.hpp>
 
 // Tracker libraries
 #include <object_tracking/tracker.h>
@@ -76,15 +77,10 @@
 #include <pcl-1.7/pcl/io/pcd_io.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include <pcl/visualization/cloud_viewer.h>
+// #include <pcl/visualization/cloud_viewer.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <sensor_msgs/PointCloud2.h>
 
-using namespace stereo_msgs;
-using namespace message_filters::sync_policies;
-using namespace roi_msgs;
-using namespace sensor_msgs;
-using namespace sensor_msgs::image_encodings;
 using sensor_msgs::Image;
 using cv_bridge::CvImagePtr;
 using std::vector;
@@ -93,6 +89,12 @@ using std::string;
 using cv::Rect;
 using cv::Mat;
 using sensor_msgs::PointCloud2;
+
+using namespace stereo_msgs;
+using namespace message_filters::sync_policies;
+using namespace roi_msgs;
+using namespace sensor_msgs;
+using namespace sensor_msgs::image_encodings;
 
 std::string save_img_name = "";
 
@@ -389,13 +391,13 @@ public:
     dt_ = current_.toSec() - previous_.toSec();
 
     // Use CV Bridge to convert image
-    // CvImagePtr cv_gray  = cv_bridge::toCvCopy(image_msg, image_encodings::MONO8);
-    // CvImagePtr cv_color  = cv_bridge::toCvCopy(image_msg, image_encodings::BGR8);
-    // image  = cv_color->image;
+    CvImagePtr cv_gray  = cv_bridge::toCvCopy(image_msg, image_encodings::MONO8);
+    CvImagePtr cv_color  = cv_bridge::toCvCopy(image_msg, image_encodings::BGR8);
+    image  = cv_color->image;
 
-    sensor_msgs::CvBridge bridge;
-    IplImage* ipl_im = bridge.imgMsgToCv(image_msg, "bgr8");
-    image = cv::Mat(ipl_im).clone();
+    // sensor_msgs::CvBridge bridge;
+    // IplImage* ipl_im = bridge.imgMsgToCv(image_msg, "bgr8");
+    // image = cv::Mat(ipl_im).clone();
 
     // check encoding and create an intensity image from disparity image
     assert(disparity_msg->image.encoding == image_encodings::TYPE_32FC1);

@@ -35,7 +35,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <sstream>
 
 //Publish Messages
-#include </home/valentin/human_tracker_ws/src/roi_msgs/include/roi_msgs/overlap.hpp>
+// #include </home/valentin/human_tracker_ws/src/roi_msgs/include/roi_msgs/overlap.hpp>
+#include <roi_msgs/overlap.hpp>
 #include "roi_msgs/RoiRect.h"
 #include "roi_msgs/Rois.h"
 #include "std_msgs/String.h"
@@ -301,7 +302,8 @@ namespace HaarAda
 	  ROS_ERROR("classifier_file param not set");
 	}
 	ROS_ERROR("Submitting %d Samples to Train ouput= %s",HAC_.numSamples_,cfnm.c_str());
-	HAC_.train(cfnm);
+	// HAC_.train(cfnm);
+	ROS_ERROR("NO TRAINING!");
 	private_node_.setParam("mode", std::string("evaluate"));
 	ROS_ERROR("DONE TRAINING, switching to evaluate mode");
 	break;

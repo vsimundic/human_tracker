@@ -15,19 +15,19 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
 )
-find_package(OpenCV 2 REQUIRED
+find_package(OpenCV 3 REQUIRED
 NO_MODULE
-PATHS /home/valentin/cv/usr/local
+# PATHS /home/valentin/cv/usr/local
 NO_DEFAULT_PATH
 )
 
-set(${OpenCV_INCLUDE_DIRS}
-	/home/valentin/cv/usr/local/include
-	/home/valentin/cv/usr/local/include/opencv2
-)
-set(${OpenCV_LIB_DIR}
-  /home/valentin/cv/usr/local/lib
-)
+# set(${OpenCV_INCLUDE_DIRS}
+# 	/home/valentin/cv/usr/local/include
+# 	/home/valentin/cv/usr/local/include/opencv2
+# )
+# set(${OpenCV_LIB_DIR}
+#   /home/valentin/cv/usr/local/lib
+# )
 
 catkin_package(
 #  INCLUDE_DIRS include

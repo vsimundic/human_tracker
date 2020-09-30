@@ -59,7 +59,7 @@
     /*****************************************************************************
         ** Namespaces
     *****************************************************************************/
-    using namespace cv;
+    // using namespace cv;
     // using namespace cv::ml;
     
     namespace HaarAda {
@@ -70,6 +70,7 @@
         using  cv::Range;
         using  cv::Size;
         using  cv::INTER_AREA;
+        using  cv::ml::Boost;
         
         /*****************************************************************************
             ** Class
@@ -98,7 +99,7 @@
             void setMaxSamples(int n);
             int getMaxSamples(){ return(maxSamples_);};
             private:
-            CvBoost HAC_;
+            cv::Ptr<Boost> HAC_;
             string classifier_filename_; // for loading and saving
             int maxSamples_;
             int num_filters_;

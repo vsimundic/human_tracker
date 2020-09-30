@@ -17,7 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
 )
-find_package(OpenCV 2 REQUIRED)
+find_package(OpenCV 3 REQUIRED)
 find_package(PCL REQUIRED)
 message("OpenCV version: ${OpenCV_VERSION}")
 
@@ -26,13 +26,13 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-set(${OpenCV_INCLUDE_DIRS}
-	/home/valentin/cv/usr/local/include
-	/home/valentin/cv/usr/local/include/opencv2
-)
-set(${OpenCV_LIB_DIR}
-  /home/valentin/cv/usr/local/lib
-)
+# set(${OpenCV_INCLUDE_DIRS}
+# 	/home/valentin/cv/usr/local/include
+# 	/home/valentin/cv/usr/local/include/opencv2
+# )
+# set(${OpenCV_LIB_DIR}
+#   /home/valentin/cv/usr/local/lib
+# )
 
 
 catkin_package(

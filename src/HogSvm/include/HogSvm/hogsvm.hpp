@@ -40,7 +40,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 #include <map>
 #include <boost/filesystem.hpp>
-#include <opencv2/core/core.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
 #include <opencv/cv.h>
 #include <opencv/ml.h>
 #include <roi_msgs/Rois.h>
@@ -72,7 +73,7 @@ using  cv::FileStorage;
     bool loaded;
     void load();
     int addToTraining(vector<Rect> &R_in, vector<int> &Labels_in,  Mat &Image_in);
-    void train(string filename);
+    // void train(string filename);
     void detect(vector<Rect> &R_in, 
 		vector<int>  &L_in,
 		Mat &I_in, 
@@ -92,7 +93,7 @@ using  cv::FileStorage;
 
   private:
     int cell_size;
-    CvSVM HSC_;
+    cv::Ptr<cv::ml::SVM> HSC_;
     string detectDir_; // base directory containing both classifier and blocks xml files
     string classifier_filename_; // for loading and saving
     string blocks_filename_;     // defines Hog blocks

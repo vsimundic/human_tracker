@@ -286,7 +286,7 @@ namespace HaarDispAda
 	}
 	HDAC_.HaarDispAdaPrior_ = temp;
 	ROS_ERROR("Submitting %d Samples to Train ouput= %s",HDAC_.numSamples_,cfnm.c_str());
-	HDAC_.train(cfnm);
+	// HDAC_.train(cfnm);
 	private_node_.setParam("mode", std::string("evaluate"));
 	ROS_ERROR("DONE TRAINING, switching to evaluate mode");
 	break;

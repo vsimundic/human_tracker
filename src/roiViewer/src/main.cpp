@@ -57,15 +57,16 @@
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
-#include </home/valentin/cv_bridge/include/cv_bridge/CvBridge.h>
+// #include </home/valentin/cv_bridge/include/cv_bridge/CvBridge.h>
 
 // Image Transport
 #include <image_transport/image_transport.h>
 #include <image_transport/subscriber_filter.h>
 
 // Used to display OPENCV images
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
+// #include <opencv2/core/core.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
 
 using namespace sensor_msgs;
 using namespace stereo_msgs;
@@ -129,8 +130,8 @@ class roiViewerNode
 		}
 		
 		// Visualization
-		cv::namedWindow("Detections", 0 ); // non-autosized
-		cv::startWindowThread();
+		// cv::namedWindow("Detections", 0 ); // non-autosized
+		// cv::startWindowThread();
 		
 	}
 	
@@ -139,21 +140,21 @@ class roiViewerNode
 		std::string filename = image_msg->header.frame_id.c_str();
 		std::string imgName = filename.substr(filename.find_last_of("/")+1);
 		
-		ROS_INFO("roiViewer Callback called for image: %s", imgName.c_str());
+		ROS_ERROR("roiViewer Callback called for image: %s", imgName.c_str());
 		
 		//Use CV Bridge to convert images       
 		
 		// ROS_ERROR("%s aaaaaaaa", image_msg->encoding);
-		// cv_bridge::CvImagePtr cv_color = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::BGR8);
+		cv_bridge::CvImagePtr cv_color = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::BGR8);
 		// ROS_ERROR("%s", image_msg->encoding);
-		sensor_msgs::CvBridge bridge;
-		IplImage* ipl_im = bridge.imgMsgToCv(image_msg, "bgr8");
-		cv::Mat cv_color = cv::Mat(ipl_im); 
+		// sensor_msgs::CvBridge bridge;
+		// IplImage* ipl_im = bridge.imgMsgToCv(image_msg, "bgr8");
+		// cv::Mat cv_color = cv::Mat(ipl_im); 
 		
 		RoiRect roi;
 		
 		//For each roi in rois message
-		ROS_INFO("ROIS size: %d",rois_msg->rois.size());
+		ROS_ERROR("ROIS size: %d",rois_msg->rois.size());
 		for(unsigned int i=0;i<rois_msg->rois.size();i++)
 		{
 			roi = rois_msg->rois[i];
@@ -164,14 +165,14 @@ class roiViewerNode
 				Point ptUpperLeft = Point(roi.x,roi.y);
 				Point ptLowerRight = Point(roi.x+roi.width,roi.y+roi.height);
 				
-				rectangle(cv_color,ptUpperLeft,ptLowerRight,Scalar(255,255,255));
+				rectangle(cv_color->image,ptUpperLeft,ptLowerRight,Scalar(255,255,255));
 			}	
 		}
 		
 		// Display the cv image
 		// cv::namedWindow("ROI Color Image",1);
-		cv::imshow("Detections", cv_color);
-		// cv::waitKey(1);
+		cv::imshow("Detections", cv_color->image);
+		cv::waitKey(1);
 	}
 	
 	~roiViewerNode(){}

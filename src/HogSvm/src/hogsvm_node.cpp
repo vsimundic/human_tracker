@@ -47,7 +47,6 @@
 #include <message_filters/synchronizer.h>
 
 // Subscribe Messages
-#include </home/valentin/cv_bridge/include/cv_bridge/CvBridge.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/Image.h>
@@ -59,8 +58,8 @@
 #include <image_transport/subscriber_filter.h>
 
 // Used to display OPENCV images
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
 
 // Includes for pointcloud
 #include <pcl-1.7/pcl/io/pcd_io.h>
@@ -242,11 +241,11 @@ public:
 	string nn = ros::this_node::getName();
 
 	// Use CV Bridge to convert images
-	sensor_msgs::CvBridge bridge;
-	IplImage* ipl_im = bridge.imgMsgToCv(image_msg, image_encodings::MONO8);
-	Mat im_gray = Mat(ipl_im);
-	// CvImagePtr cv_gray  = cv_bridge::toCvCopy(image_msg,image_encodings::MONO8);
-	// Mat im_gray  = cv_gray->image;
+	// sensor_msgs::CvBridge bridge;
+	// IplImage* ipl_im = bridge.imgMsgToCv(image_msg, image_encodings::MONO8);
+	// Mat im_gray = Mat(ipl_im);
+	CvImagePtr cv_gray  = cv_bridge::toCvCopy(image_msg,image_encodings::MONO8);
+	Mat im_gray  = cv_gray->image;
 
 	// take the region of interest message and create vectors of ROIs and labels
 	vector<int> L_in;
@@ -328,7 +327,7 @@ public:
 		break;
 	  case TRAIN:
 		ROS_ERROR("TRAINING");
-		HSC_.train(cfnm);
+		// HSC_.train(cfnm);
 		param_name = nn + "/mode";
 		node_.setParam(param_name, std::string("evaluate"));
 		ROS_ERROR("DONE TRAINING, switching to evaluate mode");

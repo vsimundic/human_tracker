@@ -47,7 +47,7 @@
 #include <message_filters/synchronizer.h>
 
 // Subscribe Messages
-#include </home/valentin/cv_bridge/include/cv_bridge/CvBridge.h>
+// #include </home/valentin/cv_bridge/include/cv_bridge/CvBridge.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/Image.h>
@@ -240,11 +240,11 @@ public:
 	int numSamples;
 
 	// Use CV Bridge to convert image
-	sensor_msgs::CvBridge bridge;
-	IplImage* ipl_im = bridge.imgMsgToCv(image_msg, image_encodings::MONO8);
-	Mat im_gray = Mat(ipl_im);
-	// CvImagePtr cv_gray  = cv_bridge::toCvCopy(image_msg,image_encodings::MONO8);
-	// Mat im_gray  = cv_gray->image;
+	// sensor_msgs::CvBridge bridge;
+	// IplImage* ipl_im = bridge.imgMsgToCv(image_msg, image_encodings::MONO8);
+	// Mat im_gray = Mat(ipl_im);
+	CvImagePtr cv_gray  = cv_bridge::toCvCopy(image_msg,image_encodings::MONO8);
+	Mat im_gray  = cv_gray->image;
 
 	// take the region of interest message and create vectors of ROIs and labels
 	vector<int> L_in;
@@ -314,7 +314,7 @@ public:
 		param_name = nn + "/classifier_file";
 		node_.param(param_name, cfnm, std::string("/home/clewis/classifiers/test.xml"));
 		ROS_ERROR("Submitting %d Samples to Train ouput= %s", HSC_.numSamples_, cfnm.c_str());
-		HSC_.train(cfnm);
+		// HSC_.train(cfnm);
 		param_name = nn + "/mode";
 		node_.setParam(param_name, std::string("evaluate"));
 		ROS_ERROR("DONE TRAINING, switching to evaluate mode");

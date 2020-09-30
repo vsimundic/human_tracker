@@ -39,7 +39,7 @@ ParticleTrack::ParticleTrack()
   Q_33 = 0;
 }
 
-void ParticleTrack::initialize(cv::Mat& input, cv::Mat& disp, CvRect inROI, std::string filterDir, cv::Mat& Q,
+void ParticleTrack::initialize(cv::Mat& input, cv::Mat& disp, cv::Rect inROI, std::string filterDir, cv::Mat& Q,
                                double angle)
 {
   if (inROI.x < 0 || inROI.y < 0 || inROI.x + inROI.width >= input.cols || inROI.y + inROI.height >= input.rows)
@@ -102,7 +102,7 @@ void ParticleTrack::initialize(cv::Mat& input, cv::Mat& disp, CvRect inROI, std:
   forest1.addToTrees(features1.featurePool1);
 }
 
-void ParticleTrack::revive(cv::Mat& input, cv::Mat& disp, CvRect inROI)
+void ParticleTrack::revive(cv::Mat& input, cv::Mat& disp, cv::Rect inROI)
 {
   if (inROI.x < 0 || inROI.y < 0 || inROI.x + inROI.width >= input.cols || inROI.y + inROI.height >= input.rows)
   {
@@ -233,7 +233,7 @@ void ParticleTrack::grow(cv::Mat& input)
   }
 }
 
-void ParticleTrack::draw_box(cv::Mat& image, CvScalar clr)
+void ParticleTrack::draw_box(cv::Mat& image, cv::Scalar clr)
 {
   if (!is_dead_)
   {

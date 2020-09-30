@@ -16,7 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   roi_msgs
   roscpp
 )
-find_package(OpenCV 2 REQUIRED)
+find_package(OpenCV 3 REQUIRED)
 message("OpenCV version: ${OpenCV_VERSION}")
 
 #set the default path for built executables to the "bin" directory

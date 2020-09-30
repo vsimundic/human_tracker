@@ -37,7 +37,8 @@
 // Ros package includes
 #include <roi_msgs/RoiRect.h>
 #include <roi_msgs/Rois.h>
-#include </home/valentin/human_tracker_ws/src/roi_msgs/include/roi_msgs/overlap.hpp>
+#include <roi_msgs/overlap.hpp>
+//#include </home/valentin/human_tracker/src/roi_msgs/include/roi_msgs/overlap.hpp>
 #include <consistency/consistency.hpp>
 
 // Time Synchronizer
@@ -55,7 +56,7 @@
 #include <stereo_msgs/DisparityImage.h>
 // #include <cv_bridge/cvBridge.h>
 // #include </home/valentin/human_tracker_ws/src/cv_bridge/include/cv_bridge/cv_bridge.h>
-#include </home/valentin/cv_bridge/include/cv_bridge/CvBridge.h>
+// #include </home/valentin/cv_bridge/include/cv_bridge/CvBridge.h>
 
 // Image Transport
 #include <image_transport/image_transport.h>
@@ -127,7 +128,7 @@ private:
   bool useDefaultRoi;
 
   // Use visualization
-  bool visualize_flag = false;
+  bool visualize_flag;
 
 public:
   explicit consistencyNode(const ros::NodeHandle& nh) : node_(nh)
@@ -280,9 +281,23 @@ public:
 	// cv_bridge::CvImagePtr cv_color = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::BGR8);
 
 	// ROS_ERROR("Could not convert from '%s' to 'bgr8'.", typeid(disparity_msg).name());
-
-	sensor_msgs::CvBridge bridge;
-	IplImage* ipl_im = bridge.imgMsgToCv(image_msg, "bgr8");
+	
+	cv_bridge::CvImagePtr cv_ptr;
+	try
+  	{
+		// ROS_ERROR("PRE_TOCVCOPY");
+    	cv_ptr = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::BGR8);
+		// ROS_ERROR("POST_TOCVCOPY");
+	  }
+  	catch(cv_bridge::Exception& e)
+  	{
+    	ROS_ERROR("cv_bridge exception in bbox_info: %s", e.what());
+    	return;
+ 	}
+	
+	
+	// sensor_msgs::CvBridge bridge;
+	// IplImage* ipl_im = bridge.imgMsgToCv(image_msg, "bgr8");
 
 	assert(disparity_msg->image.encoding == sensor_msgs::image_encodings::TYPE_32FC1);
 
@@ -342,7 +357,7 @@ public:
 	}
 
 	// pass Color and Disparity Image to consistency object
-	con_.color_image = cv::Mat(ipl_im);
+	con_.color_image = cv_ptr->image;
 
 	// con_.disparity_image=cv::Mat(ipl_imD);
 	con_.disparity_image = dmat;
@@ -436,14 +451,18 @@ public:
   void realCallbackWithPtcloud(const ImageConstPtr& image_msg, const DisparityImageConstPtr& disparity_msg,
 							   const RoisConstPtr& rois_msg, const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   {
+	ROS_ERROR("PRE-WEEEE");
 	imageCb(image_msg, disparity_msg, rois_msg);
+	ROS_ERROR("WEEEE");
 	pub_Ptcloud.publish(cloud_msg);
   }
 
   void realCallback2WithPtcloud(const ImageConstPtr& image_msg, const DisparityImageConstPtr& disparity_msg,
 								const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   {
+	ROS_ERROR("PRE-WEEEE2");
 	imageCb2(image_msg, disparity_msg);
+	ROS_ERROR("WEEEE2");
 	pub_Ptcloud.publish(cloud_msg);
   }
 

@@ -37,7 +37,8 @@ POSSIBILITY OF SUCH DAMAGE.
 
 // Ros package includes
 #include <consistency/consistency.hpp>
-#include </home/valentin/human_tracker_ws/src/roi_msgs/include/roi_msgs/overlap.hpp>
+// #include </home/valentin/human_tracker_ws/src/roi_msgs/include/roi_msgs/overlap.hpp>
+#include <roi_msgs/overlap.hpp>
 #include <roi_msgs/RoiRect.h>
 #include <roi_msgs/Rois.h>
 

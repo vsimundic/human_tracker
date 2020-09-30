@@ -17,7 +17,8 @@
 #include <message_filters/time_synchronizer.h>
 
 // Subscribe Messages
-#include </home/valentin/cv_bridge/include/cv_bridge/CvBridge.h>
+// #include </home/valentin/cv_bridge/include/cv_bridge/CvBridge.h>
+// #include "cv_bridge/CvBridge.h"
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/Image.h>
@@ -65,9 +66,23 @@ using std_msgs::Float64;
 void entryCallback(const ImageConstPtr& image_msg, const HumanEntriesConstPtr& entry_msg, const RoisConstPtr& rois_msg)
 {
   // Changing the format from ROS message to cv image
-  sensor_msgs::CvBridge bridge;
-  IplImage* ipl_im = bridge.imgMsgToCv(image_msg, "passthrough");
-  cv::Mat cv_color = cv::Mat(ipl_im).clone();
+  cv_bridge::CvImagePtr cv_ptr;
+
+  try
+  {
+    cv_ptr = cv_bridge::toCvCopy(image_msg, sensor_msgs::image_encodings::BGR8);
+  }
+  catch(cv_bridge::Exception& e)
+  {
+    ROS_ERROR("cv_bridge exception in bbox_info: %s", e.what());
+    return;
+  }
+
+  // sensor_msgs::CvBridge bridge;
+  // IplImage* ipl_im = bridge.imgMsgToCv(image_msg, "passthrough");
+  // cv::Mat cv_color = cv::Mat(ipl_im).clone();
+
+  cv::Mat cv_color = cv_ptr->image;
 
   // Loop through ROIs and create rectangles on the image
   for (int i = 0; i < rois_msg->rois.size(); i++)

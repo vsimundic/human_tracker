@@ -57,6 +57,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <sys/stat.h>
 #include <fstream>
 #include <iostream>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 
 // Package files
 #include <object_tracking/features.h>
@@ -100,8 +102,8 @@ public:
   double size_;
 
   cv::Point objectLocation;
-  CvRect objectROI;
-  CvRect searchROI;
+  cv::Rect objectROI;
+  cv::Rect searchROI;
   cv::Mat hist_;
   uint64_t uid;
 
@@ -115,9 +117,9 @@ public:
    * @param[in] input The input image
    * @param[in] inROI the tracking box
    */
-  void initialize(cv::Mat& input, cv::Mat& disp, CvRect inROI, std::string filterDir, cv::Mat& Q, double angle);
+  void initialize(cv::Mat& input, cv::Mat& disp, cv::Rect inROI, std::string filterDir, cv::Mat& Q, double angle);
 
-  void revive(cv::Mat& input, cv::Mat& xz, CvRect inROI);
+  void revive(cv::Mat& input, cv::Mat& xz, cv::Rect inROI);
 
   /**
    * @brief Update the tracker state
@@ -130,7 +132,7 @@ public:
    * @param[in] image The image to draw on
    * @param[in] clr The color of the box
    */
-  void draw_box(cv::Mat& image, CvScalar clr);
+  void draw_box(cv::Mat& image, cv::Scalar clr);
 
   /**
    * @brief Score an object against the tracker

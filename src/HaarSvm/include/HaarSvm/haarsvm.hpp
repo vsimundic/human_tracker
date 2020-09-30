@@ -41,6 +41,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <map>
 #include <boost/filesystem.hpp>
 #include <opencv2/core/core.hpp>
+#include <opencv2/imgproc.hpp>
 #include <opencv/cv.h>
 #include <opencv/ml.h>
 #include <roi_msgs/Rois.h>
@@ -58,6 +59,7 @@ using  cv::Rect;
 using  cv::Range;
 using  cv::Size;
 using  cv::INTER_AREA;
+using  cv::ml::SVM;
 
   /*****************************************************************************
    ** Class
@@ -72,7 +74,7 @@ using  cv::INTER_AREA;
     bool loaded;
     void load(string filename);
     int addToTraining(vector<Rect> R_in, vector<int> Labels_in, Mat Image_in);
-    void train(string filename);
+    // void train(string filename);
     void detect(vector<Rect> &R_in, 
 		vector<int> &L_in,
 		Mat &I_in, 
@@ -86,7 +88,7 @@ using  cv::INTER_AREA;
     void setMaxSamples(int n);
     int getMaxSamples(){return(maxSamples_);};
   private:
-    CvSVM HSC_;
+    cv::Ptr<SVM> HSC_;
     string classifier_filename_; // for loading and saving
     int maxSamples_;
     int num_filters_;

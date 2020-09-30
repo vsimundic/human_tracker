@@ -159,6 +159,7 @@ void PointCloudXyzrgbNodelet::imageCb(const sensor_msgs::ImageConstPtr& depth_ms
                                       const sensor_msgs::ImageConstPtr& rgb_msg_in,
                                       const sensor_msgs::CameraInfoConstPtr& info_msg)
 {
+  ROS_ERROR("I'm in imageCb");
   // Check for bad inputs
   if (depth_msg->header.frame_id != rgb_msg_in->header.frame_id)
   {
@@ -279,7 +280,7 @@ void PointCloudXyzrgbNodelet::imageCb(const sensor_msgs::ImageConstPtr& depth_ms
     NODELET_ERROR_THROTTLE(5, "Depth image has unsupported encoding [%s]", depth_msg->encoding.c_str());
     return;
   }
-
+  ROS_ERROR("Publishing ptcloud");
   pub_point_cloud_.publish(cloud_msg);
 }
 

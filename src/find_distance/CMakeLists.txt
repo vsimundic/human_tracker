@@ -18,7 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
 )
 
-find_package(OpenCV 2 REQUIRED)
+find_package(OpenCV 3 REQUIRED)
 message("OpenCV version: ${OpenCV_VERSION}")
 
 find_package(PCL REQUIRED)

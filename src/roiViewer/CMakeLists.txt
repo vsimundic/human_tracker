@@ -14,10 +14,10 @@ find_package(catkin REQUIRED COMPONENTS
   roi_msgs
   roscpp
 )
-find_package(OpenCV 2 REQUIRED
-NO_MODULE
-PATHS /home/valentin/cv/usr/local
-NO_DEFAULT_PATH
+find_package(OpenCV 3 REQUIRED
+# NO_MODULE
+# PATHS /home/valentin/cv/usr/local
+# NO_DEFAULT_PATH
 )
 
 #set the default path for built executables to the "bin" directory
@@ -26,13 +26,13 @@ NO_DEFAULT_PATH
 
 # set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-set(${OpenCV_INCLUDE_DIRS}
-	/home/valentin/cv/usr/local/include
-	/home/valentin/cv/usr/local/include/opencv2
-)
-set(${OpenCV_LIB_DIR}
-  /home/valentin/cv/usr/local/lib
-)
+# set(${OpenCV_INCLUDE_DIRS}
+# 	/home/valentin/cv/usr/local/include
+# 	/home/valentin/cv/usr/local/include/opencv2
+# )
+# set(${OpenCV_LIB_DIR}
+#   /home/valentin/cv/usr/local/lib
+# )
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES roiViewer
