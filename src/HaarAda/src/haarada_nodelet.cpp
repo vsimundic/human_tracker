@@ -370,6 +370,6 @@ namespace HaarAda
 }// end of haarada
 
 
-#include <pluginlib/class_list_macros.h>
-// PLUGINLIB_DECLARE_CLASS(pkg,class_name,class_type,base_class_type)
-PLUGINLIB_DECLARE_CLASS(HaarAda,haarada_nodelet, HaarAda::HaarAdaNodelet, nodelet::Nodelet)
+// #include <pluginlib/class_list_macros.h>
+// // PLUGINLIB_DECLARE_CLASS(pkg,class_name,class_type,base_class_type)
+// PLUGINLIB_DECLARE_CLASS(HaarAda,haarada_nodelet, HaarAda::HaarAdaNodelet, nodelet::Nodelet)

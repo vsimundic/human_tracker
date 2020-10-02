@@ -32,7 +32,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 // PCL and PointCloud
-#include <pcl-1.7/pcl/io/pcd_io.h>
+#include <pcl-1.8/pcl/io/pcd_io.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/visualization/cloud_viewer.h>

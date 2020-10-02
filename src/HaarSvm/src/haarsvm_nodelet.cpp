@@ -339,7 +339,7 @@ namespace HaarSvm
   };
 }// end of namespace HaarSvm
 
-#include <pluginlib/class_list_macros.h>
-// PLUGINLIB_DECLARE_CLASS(pkg,class_name,class_type,base_class_type)
-PLUGINLIB_DECLARE_CLASS(HaarSvm,haarsvm_nodelet, HaarSvm::HaarSvmNodelet, nodelet::Nodelet)
+// #include <pluginlib/class_list_macros.h>
+// // PLUGINLIB_DECLARE_CLASS(pkg,class_name,class_type,base_class_type)
+// PLUGINLIB_DECLARE_CLASS(HaarSvm,haarsvm_nodelet, HaarSvm::HaarSvmNodelet, nodelet::Nodelet)
 

@@ -352,6 +352,6 @@ namespace HaarDispAda
 
 }// end of HaarDispAda namespace
 
-#include <pluginlib/class_list_macros.h>
-// PLUGINLIB_DECLARE_CLASS(pkg,class_name,class_type,base_class_type)
-PLUGINLIB_DECLARE_CLASS(HaarDispAda,haardispada_nodelet, HaarDispAda::HaarDispAdaNodelet, nodelet::Nodelet)
+// #include <pluginlib/class_list_macros.h>
+// // PLUGINLIB_DECLARE_CLASS(pkg,class_name,class_type,base_class_type)
+// PLUGINLIB_DECLARE_CLASS(HaarDispAda,haardispada_nodelet, HaarDispAda::HaarDispAdaNodelet, nodelet::Nodelet)

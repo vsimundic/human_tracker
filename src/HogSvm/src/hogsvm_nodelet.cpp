@@ -395,6 +395,6 @@ public:
 }// end of HogSvm namespace
 
 
-#include <pluginlib/class_list_macros.h>
-// PLUGINLIB_DECLARE_CLASS(pkg,class_name,class_type,base_class_type)
-PLUGINLIB_DECLARE_CLASS(HogSvm,hogsvm_nodelet, HogSvm::HogSvmNodelet, nodelet::Nodelet)
+// #include <pluginlib/class_list_macros.h>
+// // PLUGINLIB_DECLARE_CLASS(pkg,class_name,class_type,base_class_type)
+// PLUGINLIB_DECLARE_CLASS(HogSvm,hogsvm_nodelet, HogSvm::HogSvmNodelet, nodelet::Nodelet)

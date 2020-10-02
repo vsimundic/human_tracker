@@ -68,7 +68,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 // Includes for pointcloud
-#include <pcl-1.7/pcl/io/pcd_io.h>
+#include <pcl-1.8/pcl/io/pcd_io.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/visualization/cloud_viewer.h>

@@ -9,7 +9,7 @@
     <arg name="visual" default="false"/>
 	<param name="visualization/ptcloud" type="bool" value="$(arg visual)" />
 
-    <node pkg="nodelet" type="nodelet" name="standalone" args="load depth_image_proc/point_cloud_xyzrgb"></node>
+    <!-- <node pkg="nodelet" type="nodelet" name="standalone" args="load depth_image_proc/point_cloud_xyzrgb"></node> -->
 
     <!-- Launch consisteny node -->
     <node pkg="consistency" type="consistency_node" name="consistency">
