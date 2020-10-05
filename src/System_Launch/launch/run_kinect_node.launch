@@ -3,11 +3,12 @@
     <arg name="classifierDir" default="Kinect"/>
     
     <!-- Launch the kinect -->
-    <!-- <include file="$(find openni_launch)/launch/openni.launch"/>  -->
+    <include file="$(find openni_launch)/launch/openni.launch"/> 
     
     <!-- ### Set the visualization parameter ### -->
-    <arg name="visual" default="false"/>
+    <arg name="visual" default="true"/>
 	<param name="visualization/ptcloud" type="bool" value="$(arg visual)" />
+
 
     <!-- <node pkg="nodelet" type="nodelet" name="standalone" args="load depth_image_proc/point_cloud_xyzrgb"></node> -->
 
@@ -23,7 +24,7 @@
         <remap from="input_rois" to="output_rois" />
         <remap from="Color_Image" to="/camera/rgb/image_color" />
         <remap from="Disparity_Image" to="/camera/depth_registered/disparity" />
-        <remap from="PtCloud" to="/points" />
+        <remap from="PtCloud" to="/camera/depth_registered/points" />
         <param name="Kinect_Disparity_Fix" value="true"/>	
     </node>
     
@@ -116,17 +117,24 @@
     
     <!-- Launch Bounding Box Info Node -->
     <node name="BboxInfoNode" pkg="bbox_info" type="bbox_info_node" output="screen">
-        <param name="Show_Images" type="bool" value="true" />
+        <param name="Show_Images" type="bool" value="false" />
     </node>
     
     <group if="$(arg visual)">
         <!-- publishing needed tf for dataset -->
-        <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 -0.5 0.5 -0.5 0.5  world camera_rgb_optical_frame 30" />
     
         <!-- nodelet for converting pointcloud -->
-        <node pkg="nodelet" type="nodelet" name="point_cloud_xyzrgb"
-            args="standalone depth_image_proc/point_cloud_xyzrgb" />
+        <!-- <node pkg="nodelet" type="nodelet" name="point_cloud_xyzrgb" args="standalone depth_image_proc/point_cloud_xyzrgb" /> -->
+        <!-- <node pkg="nodelet" type="nodelet" name="nodelet_manager" args="manager" /> -->
 
+        <!-- <node pkg="nodelet" type="nodelet" name="nodelet1" args="load depth_image_proc/point_cloud_xyzrgb nodelet_manager">
+            <remap from="camera_info" to="/camera/rgb/camera_info"/>
+            <remap from="image_rect_color" to="/camera/rgb/image_rect_color"/>
+            <remap from="image_rect" to="/camera/depth_registered/sw_registered/image_rect"/>
+        </node> -->
+
+        <!-- <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 -0.5 0.5 -0.5 0.5  world camera_rgb_optical_frame 30" /> -->
+        
         <node type="rviz" name="rviz" pkg="rviz" args="-d $(find visualize_bbox)/rviz/visualize.rviz" />
         
         <node name="VisualizeBboxNode" pkg="visualize_bbox" type="visualize_bbox_node" output="screen"> 

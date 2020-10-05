@@ -451,18 +451,18 @@ public:
   void realCallbackWithPtcloud(const ImageConstPtr& image_msg, const DisparityImageConstPtr& disparity_msg,
 							   const RoisConstPtr& rois_msg, const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   {
-	ROS_ERROR("PRE-WEEEE");
+	// ROS_ERROR("PRE-WEEEE");
 	imageCb(image_msg, disparity_msg, rois_msg);
-	ROS_ERROR("WEEEE");
+	// ROS_ERROR("WEEEE");
 	pub_Ptcloud.publish(cloud_msg);
   }
 
   void realCallback2WithPtcloud(const ImageConstPtr& image_msg, const DisparityImageConstPtr& disparity_msg,
 								const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
   {
-	ROS_ERROR("PRE-WEEEE2");
+	// ROS_ERROR("PRE-WEEEE2");
 	imageCb2(image_msg, disparity_msg);
-	ROS_ERROR("WEEEE2");
+	// ROS_ERROR("WEEEE2");
 	pub_Ptcloud.publish(cloud_msg);
   }
 

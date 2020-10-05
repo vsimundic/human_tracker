@@ -83,7 +83,7 @@ void entryCallback(const PointCloud2ConstPtr& cloud_msg, const HumanEntriesConst
   {
     visualization_msgs::Marker personMarker;
     personMarker.id = 2 * i;
-    personMarker.header.frame_id = "/world";
+    personMarker.header.frame_id = "/camera_link";
     personMarker.header.stamp = ros::Time::now();
 
     personMarker.ns = "person";
@@ -137,7 +137,7 @@ void entryCallback(const PointCloud2ConstPtr& cloud_msg, const HumanEntriesConst
       velocityMarker.type = visualization_msgs::Marker::ARROW;
       velocityMarker.action = visualization_msgs::Marker::ADD;
       velocityMarker.id = 2 * i + 1;
-      velocityMarker.header.frame_id = "/world";
+      velocityMarker.header.frame_id = "/camera_link";
       velocityMarker.header.stamp = ros::Time::now();
 
       velocityMarker.ns = "velocity";

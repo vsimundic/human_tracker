@@ -603,7 +603,7 @@ public:
       entry.ROIwidth = (*iter)->get_box_size() / Q_.at<double>(2, 3) * (*iter)->get_ar();
       entry.ROIheight = (*iter)->get_box_size() / Q_.at<double>(2, 3);
 
-      cout << (*iter)->current_map_.x << endl;
+      // cout << (*iter)->current_map_.x << endl;
       entry.Xvelocity = (*iter)->compute_velocity().x;
       entry.Yvelocity = (*iter)->compute_velocity().y;
       entry.Zvelocity = 0.0;
