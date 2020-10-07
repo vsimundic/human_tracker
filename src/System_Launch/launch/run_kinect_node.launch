@@ -3,7 +3,7 @@
     <arg name="classifierDir" default="Kinect"/>
     
     <!-- Launch the kinect -->
-    <include file="$(find openni_launch)/launch/openni.launch"/> 
+    <!-- <include file="$(find openni_launch)/launch/openni.launch"/>  -->
     
     <!-- ### Set the visualization parameter ### -->
     <arg name="visual" default="true"/>
@@ -25,7 +25,7 @@
         <remap from="Color_Image" to="/camera/rgb/image_color" />
         <remap from="Disparity_Image" to="/camera/depth_registered/disparity" />
         <remap from="PtCloud" to="/camera/depth_registered/points" />
-        <param name="Kinect_Disparity_Fix" value="true"/>	
+        <param name="Kinect_Disparity_Fix" value="true"/>
     </node>
     
     <!-- Launch HaarAda Node-->
@@ -117,9 +117,9 @@
     
     <!-- Launch Bounding Box Info Node -->
     <node name="BboxInfoNode" pkg="bbox_info" type="bbox_info_node" output="screen">
-        <param name="Show_Images" type="bool" value="false" />
+        <param name="Show_Images" type="bool" value="true" />
     </node>
-    
+
     <group if="$(arg visual)">
         <!-- publishing needed tf for dataset -->
     
