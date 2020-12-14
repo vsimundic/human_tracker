@@ -75,6 +75,7 @@ struct fixedPt
 
 // Declaration of publishers
 ros::Publisher marker_pub;
+ros::Publisher distance_pub;
 
 // Definition of the function for creating point markers
 Marker createFixedPt(double x, double y, double z)
@@ -131,11 +132,17 @@ void distanceCallback(const HumanEntriesConstPtr& entries_msg)
 
     // ROS_INFO("Distance to point: %f", entryDistance);
 
-    if (entryDistance < 1.5)
-    {
-      distance_flag = true;
-      break;
-    }
+    std_msgs::Float64 distance_to_publish;
+    distance_to_publish.data = entryDistance;
+
+    distance_pub.publish(distance_to_publish);
+    
+    // if (entryDistance < 1.5)
+    // {
+    //   distance_flag = true;
+    //   break;
+    // }
+
   }
 
   // Output an appropriate message based on the calculated distance
@@ -159,8 +166,8 @@ int main(int argc, char** argv)
 
   // Define the fixed pt
   pt.x = 2.0;    // in method this is y
-  pt.y = 1.0;    // in method this is minus x
-  pt.z = -0.75;  // in method this is minus z
+  pt.y = -2.0;    // in method this is minus x
+  pt.z = -0.15;  // in method this is minus z
 
   // Create and save ArUco marker
   // Mat image;
@@ -170,6 +177,8 @@ int main(int argc, char** argv)
 
   // Standard subs and pubs
   marker_pub = n.advertise<MarkerArray>("/fixedPt", 2);
+  distance_pub = n.advertise<std_msgs::Float64>("/distance", 2);
+
   message_filters::Subscriber<HumanEntries> entry_sub(n, "human_tracker_data", 2);
   entry_sub.registerCallback(distanceCallback);
 

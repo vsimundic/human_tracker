@@ -594,9 +594,9 @@ public:
       // Preparing human detections in meters for publishing
       entry.stamp = humans.header.stamp;
       entry.personID = (*iter)->uid;
-      entry.personCentroidX = (*iter)->current_map_.x.at<float>(0, 0);
-      entry.personCentroidY = (*iter)->current_map_.x.at<float>(1, 0);
-      entry.personCentroidZ = -(*iter)->get_height() - 5.0 * .0254;  // -half avg human head height
+      entry.personCentroidX = (*iter)->current_map_.x.at<float>(1, 0);
+      entry.personCentroidY = - (*iter)->current_map_.x.at<float>(0, 0);
+      entry.personCentroidZ = -(-(*iter)->get_height() - 5.0 * .0254);  // -half avg human head height
       entry.personBoundingBoxTopCenterX = (*iter)->current_map_.x.at<float>(0, 0);
       entry.personBoundingBoxTopCenterY = (*iter)->current_map_.x.at<float>(1, 0);
       entry.personBoundingBoxTopCenterZ = -(*iter)->get_height();
@@ -604,8 +604,8 @@ public:
       entry.ROIheight = (*iter)->get_box_size() / Q_.at<double>(2, 3);
 
       // cout << (*iter)->current_map_.x << endl;
-      entry.Xvelocity = (*iter)->compute_velocity().x;
-      entry.Yvelocity = (*iter)->compute_velocity().y;
+      entry.Xvelocity = (*iter)->compute_velocity().y;
+      entry.Yvelocity = -(*iter)->compute_velocity().x;
       entry.Zvelocity = 0.0;
 
       if (!calculate_covariance_)
