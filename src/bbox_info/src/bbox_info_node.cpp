@@ -62,6 +62,8 @@ using roi_msgs::Rois;
 using message_filters::TimeSynchronizer;
 using std_msgs::Float64;
 
+ros::Publisher imagewithDetection_pub;
+
 // Callback function
 void entryCallback(const ImageConstPtr& image_msg, const HumanEntriesConstPtr& entry_msg, const RoisConstPtr& rois_msg)
 {
@@ -92,7 +94,9 @@ void entryCallback(const ImageConstPtr& image_msg, const HumanEntriesConstPtr& e
 
     cv::rectangle(cv_color, rectHuman, cv::Scalar(0, 255, 0), 2);
   }
+  sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", cv_color).toImageMsg();
 
+  imagewithDetection_pub.publish(msg);
   // Show the image
   imshow("BboxInfo color", cv_color);
   cv::waitKey(1);
@@ -115,9 +119,11 @@ int main(int argc, char** argv)
 
   // Defining two subscribers, one for image and one for bounding box data
   // Standard stuff and subs
-  message_filters::Subscriber<Image> image_sub(n, "HogSvmColorImage", 2);
-  message_filters::Subscriber<HumanEntries> entry_sub(n, "human_tracker_data", 2);
-  message_filters::Subscriber<Rois> rois_sub(n, "ObjectTrackingRois", 2);
+  message_filters::Subscriber<Image> image_sub(n, "HogSvmColorImage", 10);
+  message_filters::Subscriber<HumanEntries> entry_sub(n, "human_tracker_data", 10);
+  message_filters::Subscriber<Rois> rois_sub(n, "ObjectTrackingRois", 10);
+
+  imagewithDetection_pub = n.advertise<Image>("ImageWithDetections", 10);
 
   // Defining Synchronizer
   TimeSynchronizer<Image, HumanEntries, Rois> sync(image_sub, entry_sub, rois_sub, 10);

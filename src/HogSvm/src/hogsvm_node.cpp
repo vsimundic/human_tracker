@@ -80,7 +80,10 @@ using std::vector;
 using std::string;
 using cv::Rect;
 using cv::Mat;
+using namespace cv;
 using sensor_msgs::PointCloud2;
+
+#define NUM_IMAGES 10
 
 class HogSvmNode
 {
@@ -92,14 +95,15 @@ private:
   message_filters::Subscriber<DisparityImage> sub_disparity_;
   message_filters::Subscriber<Image> sub_image_;
   message_filters::Subscriber<Rois> sub_rois_;
+  message_filters::Subscriber<Image> sub_depth_;
   message_filters::Subscriber<PointCloud2> sub_ptcloud_;
 
   // Define the Synchronizer
-  typedef ApproximateTime<Image, DisparityImage, Rois> ApproximatePolicy;
+  typedef ApproximateTime<Image, DisparityImage, Rois, Image> ApproximatePolicy;
   typedef message_filters::Synchronizer<ApproximatePolicy> ApproximateSync;
   boost::shared_ptr<ApproximateSync> approximate_sync_;
 
-  typedef ApproximateTime<Image, DisparityImage, Rois, PointCloud2> ApproximatePolicyWithPtcloud;
+  typedef ApproximateTime<Image, DisparityImage, Rois, PointCloud2, Image> ApproximatePolicyWithPtcloud;
   typedef message_filters::Synchronizer<ApproximatePolicyWithPtcloud> ApproximateSyncWithPtcloud;
   boost::shared_ptr<ApproximateSyncWithPtcloud> approximate_sync_with_ptcloud_;
 
@@ -132,9 +136,24 @@ private:
   int num_TP_class0;
   int num_FP_class0;
 
+
+  // sgementation of background (to remove FP)
+  cv::Mat initialDepthImg;
+  int counterImages = 0;
+  cv::Mat depthImagesArray[NUM_IMAGES];
+  
+  bool initialImageTaken;
+  cv::Mat depth_img;
+
+
 public:
   explicit HogSvmNode(const ros::NodeHandle& nh) : node_(nh)
   {
+	initialImageTaken = false;
+	initialDepthImg = cv::Mat::zeros(480, 640, CV_32FC1);
+	// ROS_ERROR("Initial rows %d", initialDepthImg.rows);
+	// ROS_ERROR("Initial cols %d", initialDepthImg.cols);
+
 	num_class1 = 0;
 	num_class0 = 0;
 	num_TP_class1 = 0;
@@ -173,6 +192,7 @@ public:
 	sub_image_.subscribe(node_, "Color_Image", qs);
 	sub_disparity_.subscribe(node_, "Disparity_Image", qs);
 	sub_rois_.subscribe(node_, "input_rois", qs);
+	sub_depth_.subscribe(node_, "Depth_Image", qs);
 
 	// Check visualization param
 	node_.param("/visualization/ptcloud", visualize_flag, false);
@@ -185,15 +205,15 @@ public:
 	// Sync the Synchronizer
 	if (!visualize_flag)
 	{
-	  approximate_sync_.reset(new ApproximateSync(ApproximatePolicy(qs), sub_image_, sub_disparity_, sub_rois_));
-	  approximate_sync_->registerCallback(boost::bind(&HogSvmNode::realCallback, this, _1, _2, _3));
+	  approximate_sync_.reset(new ApproximateSync(ApproximatePolicy(qs), sub_image_, sub_disparity_, sub_rois_, sub_depth_));
+	  approximate_sync_->registerCallback(boost::bind(&HogSvmNode::realCallback, this, _1, _2, _3, _4));
 	}
 	else
 	{
 	  approximate_sync_with_ptcloud_.reset(new ApproximateSyncWithPtcloud(ApproximatePolicyWithPtcloud(qs), sub_image_,
-																		  sub_disparity_, sub_rois_, sub_ptcloud_));
+																		  sub_disparity_, sub_rois_, sub_ptcloud_, sub_depth_));
 	  approximate_sync_with_ptcloud_->registerCallback(
-		  boost::bind(&HogSvmNode::realCallbackWithPtcloud, this, _1, _2, _3, _4));
+		  boost::bind(&HogSvmNode::realCallbackWithPtcloud, this, _1, _2, _3, _4, _5));
 	}
   }
 
@@ -228,8 +248,10 @@ public:
 	}
 	return (callback_mode);
   }
+
+
   void imageCb(const ImageConstPtr& image_msg, const DisparityImageConstPtr& disparity_msg,
-			   const RoisConstPtr& rois_msg)
+			   const RoisConstPtr& rois_msg, const ImageConstPtr& depth_msg)
   {
 	bool label_all;
 	vector<Rect> R_out;
@@ -239,6 +261,60 @@ public:
 	string hbnm;  // hog block file name
 	int numSamples;
 	string nn = ros::this_node::getName();
+
+
+	// TAKING THE INITAL DEPTH IMAGE
+	if (!initialImageTaken)
+	{
+		if (counterImages >= NUM_IMAGES) // Counter high enough - go through depth images
+		{
+			std::vector<float> pixels;
+			for (int i = 0; i < depthImagesArray[0].rows; i++)
+			{
+				for (int j = 0; j < depthImagesArray[0].cols; j++)
+				{
+
+					pixels.clear();
+					for (int k = 0; k < NUM_IMAGES; k++)
+					{
+
+						if (!isnan(depthImagesArray[k].at<float>(i, j)))
+						{
+							pixels.push_back(depthImagesArray[k].at<float>(i, j));
+						}
+					}
+
+					if (pixels.size() == 0) continue;
+					else
+					{
+
+						sort(pixels.begin(), pixels.end());
+
+						if(pixels.size() % 2 == 0)
+						{
+
+							initialDepthImg.at<float>(i, j) = (pixels[pixels.size()/2 - 1] + pixels[pixels.size()/2]) / 2;
+						}
+						else
+						{
+							initialDepthImg.at<float>(i, j) = pixels[pixels.size() / 2];
+						}
+					}
+
+				}
+			}
+
+			initialImageTaken = true;
+			ROS_INFO("Initial image saved.");
+		}
+		else // Counter low - save depth image
+		{
+			depthImagesArray[counterImages] = cv_bridge::toCvCopy(depth_msg, image_encodings::TYPE_32FC1)->image;
+			counterImages++;
+		}
+	}
+
+    depth_img = cv_bridge::toCvCopy(depth_msg,image_encodings::TYPE_32FC1)->image;
 
 	// Use CV Bridge to convert images
 	// sensor_msgs::CvBridge bridge;
@@ -259,10 +335,87 @@ public:
 	  int w = rois_msg->rois[i].width;
 	  int h = rois_msg->rois[i].height;
 	  int l = rois_msg->rois[i].label;
+	
+
+	  // Initial image is taken
+	  // // check  
+	  if(0)
+      {
+        int neighbourhood = 0;
+        int rectCenterX = (int)(x + w/2);
+        int rectCenterY = (int)(y + h/2);
+
+		if(rectCenterY >= initialDepthImg.rows || rectCenterX >= initialDepthImg.cols || 
+			rectCenterX + neighbourhood >= initialDepthImg.cols || rectCenterY + neighbourhood >= initialDepthImg.rows || 
+			rectCenterX < 0 || rectCenterY < 0 || rectCenterX - neighbourhood < 0 || rectCenterY - neighbourhood < 0 || w <= 0 || h <= 0)
+		{
+			continue;
+		}
+
+		float mae;
+		if (neighbourhood >= 2)
+		{
+			cv::Rect imgsPart(rectCenterX - neighbourhood, rectCenterY - neighbourhood, neighbourhood*2, neighbourhood*2);
+			cv::Mat initImgPart = initialDepthImg(imgsPart);
+
+			cv::Mat entryImgPart = depth_img(imgsPart);
+
+			cv::Mat tempMAE;
+			cv::absdiff(initImgPart, entryImgPart, tempMAE); // absolute difference between images
+        	mae = (float)cv::sum(tempMAE)[0]/initImgPart.total(); // calculate every pixel
+		}
+		else
+		{
+			float depth_img_pixel = depth_img.at<float>(rectCenterX, rectCenterY);
+			float init_depth_img_pixel = initialDepthImg.at<float>(rectCenterX, rectCenterY);
+
+			mae = abs(depth_img_pixel - init_depth_img_pixel);
+		}
+
+		// ROS_ERROR("[DEBUG] Something5");
+        // ROS_ERROR("[DEBUG] MAE = %.4f", mae);
+        if(mae <= 1.0f) 
+			continue;
+      }
+
 	  Rect R(x, y, w, h);
-	  R_in.push_back(R);
-	  L_in.push_back(l);
+		/*
+	  // REMOVE OVERLAPPING BOUNDING BOXES
+	  
+	  bool flag_overlap = false;
+	  if(R_in.size() > 0)
+	  {
+		for (auto& it : R_in)
+		{
+			Rect temp = R & it;
+			
+			float percentageArea = (float)(temp.area()/(float)(R.area()+it.area()-temp.area()));
+			ROS_ERROR("Area percentage = %f", percentageArea);
+			
+			if (percentageArea > 0.5f)
+			{
+				flag_overlap = true;
+				break;
+			}
+		}
+
+	  }
+	  if (!flag_overlap)
+	  {
+		R_in.push_back(R);
+		L_in.push_back(l);
+	  }
+	  */
+	 	R_in.push_back(R);
+		L_in.push_back(l);
 	}
+
+
+
+
+
+	// ROS_ERROR("[DEBUG] ----------");
+
 	// get path and name of classifier and blocks
 	param_name = nn + "/classifier_file";
 	node_.param(param_name, cfnm, std::string("/test.xml"));
@@ -288,7 +441,7 @@ public:
 		output_rois_.rois.clear();
 		output_rois_.header.stamp = image_msg->header.stamp;
 		output_rois_.header.frame_id = image_msg->header.frame_id;
-		ROS_INFO("HogSvm found %d objects", (int)L_out.size());
+		// ROS_INFO("HogSvm found %d objects", (int)L_out.size());
 		for (unsigned int i = 0; i < R_out.size(); i++)
 		{
 		  RoiRect R;
@@ -391,15 +544,15 @@ public:
   }
 
   void realCallback(const ImageConstPtr& image_msg, const DisparityImageConstPtr& disparity_msg,
-					const RoisConstPtr& rois_msg)
+					const RoisConstPtr& rois_msg, const ImageConstPtr& depth_msg)
   {
-	imageCb(image_msg, disparity_msg, rois_msg);
+	imageCb(image_msg, disparity_msg, rois_msg, depth_msg);
   }
 
   void realCallbackWithPtcloud(const ImageConstPtr& image_msg, const DisparityImageConstPtr& disparity_msg,
-							   const RoisConstPtr& rois_msg, const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
+							   const RoisConstPtr& rois_msg, const sensor_msgs::PointCloud2ConstPtr& cloud_msg, const ImageConstPtr& depth_msg)
   {
-	imageCb(image_msg, disparity_msg, rois_msg);
+	imageCb(image_msg, disparity_msg, rois_msg, depth_msg);
 	pub_Ptcloud.publish(cloud_msg);
   }
 

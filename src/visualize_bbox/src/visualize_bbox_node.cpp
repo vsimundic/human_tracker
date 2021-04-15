@@ -83,7 +83,7 @@ void entryCallback(const PointCloud2ConstPtr& cloud_msg, const HumanEntriesConst
   {
     visualization_msgs::Marker personMarker;
     personMarker.id = 2 * i;
-    personMarker.header.frame_id = "/camera_link";
+    personMarker.header.frame_id = "/camera_rgb_optical_frame";
     personMarker.header.stamp = ros::Time::now();
 
     personMarker.ns = "person";
@@ -91,18 +91,18 @@ void entryCallback(const PointCloud2ConstPtr& cloud_msg, const HumanEntriesConst
     personMarker.type = visualization_msgs::Marker::CUBE;
     personMarker.action = visualization_msgs::Marker::ADD;
 
-    personMarker.pose.position.x = entry_msg->entries[i].personBoundingBoxTopCenterY;
-    personMarker.pose.position.y = -entry_msg->entries[i].personBoundingBoxTopCenterX;
-    personMarker.pose.position.z = -entry_msg->entries[i].personBoundingBoxTopCenterZ;
+    personMarker.pose.position.x = entry_msg->entries[i].personBoundingBoxTopCenterX;
+    personMarker.pose.position.y = entry_msg->entries[i].personBoundingBoxTopCenterY;
+    personMarker.pose.position.z = entry_msg->entries[i].personBoundingBoxTopCenterZ;
 
     personMarker.pose.orientation.x = 0.0;
     personMarker.pose.orientation.y = 0.0;
     personMarker.pose.orientation.z = 0.0;
-    personMarker.pose.orientation.w = 1.0;
+    personMarker.pose.orientation.w = 0.0;
 
     personMarker.scale.x = entry_msg->entries[i].ROIwidth;
-    personMarker.scale.y = entry_msg->entries[i].ROIwidth;
-    personMarker.scale.z = entry_msg->entries[i].ROIheight;
+    personMarker.scale.y = entry_msg->entries[i].ROIheight;
+    personMarker.scale.z = entry_msg->entries[i].ROIwidth;
 
     personMarker.color.a = 0.28;  // Don't forget to set the alpha!
     personMarker.color.r = 0.0;
@@ -112,8 +112,8 @@ void entryCallback(const PointCloud2ConstPtr& cloud_msg, const HumanEntriesConst
     personMarker.lifetime = ros::Duration(0.25);
 
     // velocity length
-    double x_vel = entry_msg->entries[i].Yvelocity;
-    double y_vel = -entry_msg->entries[i].Xvelocity;
+    double x_vel = entry_msg->entries[i].Xvelocity;
+    double y_vel = entry_msg->entries[i].Zvelocity;
     double length_vel = sqrt(x_vel * x_vel + y_vel * y_vel);
 
     if (length_vel > 0)
@@ -124,20 +124,20 @@ void entryCallback(const PointCloud2ConstPtr& cloud_msg, const HumanEntriesConst
       geometry_msgs::Point start_point;
       geometry_msgs::Point end_point;
 
-      start_point.x = entry_msg->entries[i].personBoundingBoxTopCenterY;
-      start_point.y = -entry_msg->entries[i].personBoundingBoxTopCenterX;
-      start_point.z = -entry_msg->entries[i].personBoundingBoxTopCenterZ;
+      start_point.x = entry_msg->entries[i].personBoundingBoxTopCenterX;
+      start_point.y = entry_msg->entries[i].personBoundingBoxTopCenterY;
+      start_point.z = entry_msg->entries[i].personBoundingBoxTopCenterZ;
 
-      end_point.x = entry_msg->entries[i].personBoundingBoxTopCenterY + x_vel;
-      end_point.y = -entry_msg->entries[i].personBoundingBoxTopCenterX + y_vel;
-      end_point.z = -entry_msg->entries[i].personBoundingBoxTopCenterZ;
+      end_point.x = entry_msg->entries[i].personBoundingBoxTopCenterX + x_vel;
+      end_point.y = entry_msg->entries[i].personBoundingBoxTopCenterY;
+      end_point.z = entry_msg->entries[i].personBoundingBoxTopCenterZ + y_vel;
 
       // velocity Marker
       visualization_msgs::Marker velocityMarker;
       velocityMarker.type = visualization_msgs::Marker::ARROW;
       velocityMarker.action = visualization_msgs::Marker::ADD;
       velocityMarker.id = 2 * i + 1;
-      velocityMarker.header.frame_id = "/camera_link";
+      velocityMarker.header.frame_id = "/camera_rgb_optical_frame";
       velocityMarker.header.stamp = ros::Time::now();
 
       velocityMarker.ns = "velocity";
@@ -153,7 +153,7 @@ void entryCallback(const PointCloud2ConstPtr& cloud_msg, const HumanEntriesConst
       velocityMarker.color.g = 1.0;
       velocityMarker.color.b = 0.0;
 
-      velocityMarker.lifetime = ros::Duration();
+      velocityMarker.lifetime = ros::Duration(0.25);
       pplMarkers.markers.push_back(velocityMarker);
     }
     pplMarkers.markers.push_back(personMarker);

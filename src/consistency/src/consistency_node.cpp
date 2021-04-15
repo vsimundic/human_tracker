@@ -94,13 +94,15 @@ private:
   message_filters::Subscriber<DisparityImage> sub_disparity_;
   message_filters::Subscriber<Image> sub_image_;
   message_filters::Subscriber<Rois> sub_rois_;
+  message_filters::Subscriber<Image> sub_depth_;
+
   message_filters::Subscriber<sensor_msgs::PointCloud2> sub_ptcloud_;
 
   // Define the Synchronizer
-  typedef ApproximateTime<Image, DisparityImage, Rois> ApproximatePolicy;
-  typedef ApproximateTime<Image, DisparityImage> ApproximatePolicy2;
-  typedef ApproximateTime<Image, DisparityImage, Rois, PointCloud2> ApproximatePolicyWithPtcloud;
-  typedef ApproximateTime<Image, DisparityImage, PointCloud2> ApproximatePolicy2WithPtcloud;
+  typedef ApproximateTime<Image, DisparityImage, Rois, Image> ApproximatePolicy;
+  typedef ApproximateTime<Image, DisparityImage, Image> ApproximatePolicy2;
+  typedef ApproximateTime<Image, DisparityImage, Rois, PointCloud2, Image> ApproximatePolicyWithPtcloud;
+  typedef ApproximateTime<Image, DisparityImage, PointCloud2, Image> ApproximatePolicy2WithPtcloud;
 
   typedef message_filters::Synchronizer<ApproximatePolicy> ApproximateSync;
   typedef message_filters::Synchronizer<ApproximatePolicy2> ApproximateSync2;
@@ -116,6 +118,7 @@ private:
   ros::Publisher pub_rois_;
   ros::Publisher pub_Color_Image_;
   ros::Publisher pub_Disparity_Image_;
+  ros::Publisher pub_Depth_Image_;
   ros::Publisher pub_Ptcloud;
 
   Rois output_rois_;
@@ -144,10 +147,14 @@ public:
 	pub_rois_ = node_.advertise<Rois>("ConsistencyOutputRois", qs);
 	pub_Color_Image_ = node_.advertise<Image>("ConsistencyColorImage", qs);
 	pub_Disparity_Image_ = node_.advertise<DisparityImage>("ConsistencyDisparityImage", qs);
+	pub_Depth_Image_ = node_.advertise<Image>("ConsistencyDepthImage", qs);
+
 
 	// Subscribe to Messages
 	sub_image_.subscribe(node_, "Color_Image", qs);
 	sub_disparity_.subscribe(node_, "Disparity_Image", qs);
+	sub_depth_.subscribe(node_, "Depth_Image", qs);
+
 
 	// Check visualization param
 	node_.param("/visualization/ptcloud", visualize_flag, false);
@@ -168,16 +175,16 @@ public:
 	  if (!visualize_flag)
 	  {
 		// sync the syncronizer
-		approximate_sync2_.reset(new ApproximateSync2(ApproximatePolicy2(qs), sub_image_, sub_disparity_));
+		approximate_sync2_.reset(new ApproximateSync2(ApproximatePolicy2(qs), sub_image_, sub_disparity_, sub_depth_));
 		// register the 2 element callback
-		approximate_sync2_->registerCallback(boost::bind(&consistencyNode::imageCb2, this, _1, _2));
+		approximate_sync2_->registerCallback(boost::bind(&consistencyNode::realCallback2, this, _1, _2, _3));
 	  }
 	  else
 	  {
 		approximate_sync2_with_ptcloud_.reset(new ApproximateSync2WithPtcloud(
-			ApproximatePolicy2WithPtcloud(qs), sub_image_, sub_disparity_, sub_ptcloud_));
+			ApproximatePolicy2WithPtcloud(qs), sub_image_, sub_disparity_, sub_ptcloud_, sub_depth_));
 		approximate_sync2_with_ptcloud_->registerCallback(
-			boost::bind(&consistencyNode::realCallback2WithPtcloud, this, _1, _2, _3));
+			boost::bind(&consistencyNode::realCallback2WithPtcloud, this, _1, _2, _3, _4));
 	  }
 	}
 	else
@@ -188,17 +195,17 @@ public:
 	  if (!visualize_flag)
 	  {
 		// Sync the Synchronizer
-		approximate_sync_.reset(new ApproximateSync(ApproximatePolicy(4), sub_image_, sub_disparity_, sub_rois_));
+		approximate_sync_.reset(new ApproximateSync(ApproximatePolicy(4), sub_image_, sub_disparity_, sub_rois_, sub_depth_));
 
 		// register the 3 element callback
-		approximate_sync_->registerCallback(boost::bind(&consistencyNode::imageCb, this, _1, _2, _3));
+		approximate_sync_->registerCallback(boost::bind(&consistencyNode::realCallback, this, _1, _2, _3, _4));
 	  }
 	  else
 	  {
 		approximate_sync_with_ptcloud_.reset(new ApproximateSyncWithPtcloud(ApproximatePolicyWithPtcloud(4), sub_image_,
-																			sub_disparity_, sub_rois_, sub_ptcloud_));
+																			sub_disparity_, sub_rois_, sub_ptcloud_, sub_depth_));
 		approximate_sync_with_ptcloud_->registerCallback(
-			boost::bind(&consistencyNode::realCallbackWithPtcloud, this, _1, _2, _3, _4));
+			boost::bind(&consistencyNode::realCallbackWithPtcloud, this, _1, _2, _3, _4, _5));
 	  }
 	}
 
@@ -244,7 +251,7 @@ public:
 	}
   }
 
-  void imageCb2(const ImageConstPtr& image_msg, const DisparityImageConstPtr& disparity_msg)
+  void imageCb2(const ImageConstPtr& image_msg, const DisparityImageConstPtr& disparity_msg, const ImageConstPtr& depth_msg)
   {
 	// ROS_ERROR("Uso sam u imageCb2");
 	RoisPtr P(new Rois);
@@ -264,11 +271,11 @@ public:
 	dR.label = 0;
 	P->rois.push_back(dR);
 	// ROS_ERROR("Pozvat cu imageCb");
-	imageCb(image_msg, disparity_msg, P);
+	imageCb(image_msg, disparity_msg, P, depth_msg);
   }
 
   void imageCb(const ImageConstPtr& image_msg, const DisparityImageConstPtr& disparity_msg,
-			   const RoisConstPtr& rois_msg)
+			   const RoisConstPtr& rois_msg, const ImageConstPtr& depth_msg)
   {
 	string nn = ros::this_node::getName();
 	string mode = "";
@@ -433,35 +440,37 @@ public:
 	  pub_rois_.publish(output_rois_);
 	  pub_Color_Image_.publish(image_msg);
 	  pub_Disparity_Image_.publish(disparity_msg);
+	  pub_Depth_Image_.publish(depth_msg);
 	}
 	// ROS_ERROR("ZAVRSIO SAM OVO SVE TU.");
   }
 
   void realCallback(const ImageConstPtr& image_msg, const DisparityImageConstPtr& disparity_msg,
-					const RoisConstPtr& rois_msg)
+					const RoisConstPtr& rois_msg, const ImageConstPtr& depth_msg)
   {
-	imageCb(image_msg, disparity_msg, rois_msg);
+	imageCb(image_msg, disparity_msg, rois_msg, depth_msg);
   }
 
-  void realCallback2(const ImageConstPtr& image_msg, const DisparityImageConstPtr& disparity_msg)
+  void realCallback2(const ImageConstPtr& image_msg, const DisparityImageConstPtr& disparity_msg, const ImageConstPtr& depth_msg)
   {
-	imageCb2(image_msg, disparity_msg);
+	imageCb2(image_msg, disparity_msg, depth_msg);
   }
 
   void realCallbackWithPtcloud(const ImageConstPtr& image_msg, const DisparityImageConstPtr& disparity_msg,
-							   const RoisConstPtr& rois_msg, const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
+							   const RoisConstPtr& rois_msg, const sensor_msgs::PointCloud2ConstPtr& cloud_msg, const ImageConstPtr& depth_msg)
   {
 	// ROS_ERROR("PRE-WEEEE");
-	imageCb(image_msg, disparity_msg, rois_msg);
+	imageCb(image_msg, disparity_msg, rois_msg, depth_msg);
 	// ROS_ERROR("WEEEE");
 	pub_Ptcloud.publish(cloud_msg);
+	
   }
 
   void realCallback2WithPtcloud(const ImageConstPtr& image_msg, const DisparityImageConstPtr& disparity_msg,
-								const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
+								const sensor_msgs::PointCloud2ConstPtr& cloud_msg, const ImageConstPtr& depth_msg)
   {
 	// ROS_ERROR("PRE-WEEEE2");
-	imageCb2(image_msg, disparity_msg);
+	imageCb2(image_msg, disparity_msg, depth_msg);
 	// ROS_ERROR("WEEEE2");
 	pub_Ptcloud.publish(cloud_msg);
   }

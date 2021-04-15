@@ -162,6 +162,11 @@ private:
   bool show_images_;
   int max_objects_;
 
+  // sgementation of background (to remove FP)
+  cv::Mat_<float> initialDepthImg;
+  bool initialImageTaken;
+  cv::Mat depth_img;
+
   // Use visualization
   bool visualize_flag = false;
 
@@ -260,6 +265,8 @@ public:
     sub_rois_.subscribe(node_, "input_rois", qs);
     l_camera_info_.subscribe(node_, "camera/rgb/camera_info", qs);  // dodano
     r_camera_info_.subscribe(node_, "camera/rgb/camera_info", qs);  // dodano
+
+    initialImageTaken = false;
 
     // Check visualization param
     node_.param("/visualization/ptcloud", visualize_flag, false);
@@ -393,6 +400,7 @@ public:
     // Use CV Bridge to convert image
     CvImagePtr cv_gray  = cv_bridge::toCvCopy(image_msg, image_encodings::MONO8);
     CvImagePtr cv_color  = cv_bridge::toCvCopy(image_msg, image_encodings::BGR8);
+    // CvImagePtr cv_depth  = cv_bridge::toCvCopy(disparity_msg, image_encodings::TYPE_32FC1);
     image  = cv_color->image;
 
     // sensor_msgs::CvBridge bridge;
@@ -588,25 +596,26 @@ public:
     {
       // Output coordinate system rotated from tracker coordinate system
       // R = [1 0 0; 0 0 1; 0 -1 0]
+
       roi_msgs::HumanEntry entry;
       roi_msgs::RoiRect roi;
 
       // Preparing human detections in meters for publishing
       entry.stamp = humans.header.stamp;
       entry.personID = (*iter)->uid;
-      entry.personCentroidX = (*iter)->current_map_.x.at<float>(1, 0);
-      entry.personCentroidY = - (*iter)->current_map_.x.at<float>(0, 0);
-      entry.personCentroidZ = -(-(*iter)->get_height() - 5.0 * .0254);  // -half avg human head height
+      entry.personCentroidX = (*iter)->current_map_.x.at<float>(0, 0);
+      entry.personCentroidZ = (*iter)->current_map_.x.at<float>(1, 0);
+      entry.personCentroidY = -(*iter)->get_height() - 5.0 * .0254;  // -half avg human head height
       entry.personBoundingBoxTopCenterX = (*iter)->current_map_.x.at<float>(0, 0);
-      entry.personBoundingBoxTopCenterY = (*iter)->current_map_.x.at<float>(1, 0);
-      entry.personBoundingBoxTopCenterZ = -(*iter)->get_height();
+      entry.personBoundingBoxTopCenterZ = (*iter)->current_map_.x.at<float>(1, 0);
+      entry.personBoundingBoxTopCenterY = -(*iter)->get_height();
       entry.ROIwidth = (*iter)->get_box_size() / Q_.at<double>(2, 3) * (*iter)->get_ar();
       entry.ROIheight = (*iter)->get_box_size() / Q_.at<double>(2, 3);
-
+      
       // cout << (*iter)->current_map_.x << endl;
-      entry.Xvelocity = (*iter)->compute_velocity().y;
-      entry.Yvelocity = -(*iter)->compute_velocity().x;
-      entry.Zvelocity = 0.0;
+      entry.Xvelocity = (*iter)->compute_velocity().x;
+      entry.Zvelocity = (*iter)->compute_velocity().y;
+      entry.Yvelocity = 0.0;
 
       if (!calculate_covariance_)
       {
@@ -618,9 +627,12 @@ public:
       {
         cv::Mat covar = (*iter)->calculate_covariance();
         entry.Xsigma = std::sqrt(covar.at<double>(0, 0));
-        entry.Ysigma = std::sqrt(covar.at<double>(1, 1));
-        entry.Zsigma = 0.0;
+        entry.Zsigma = std::sqrt(covar.at<double>(1, 1));
+        entry.Ysigma = 0.0;
       }
+      
+
+
 
       // Preparing detections in pixels (ROIs) for publishing
       roi.label = (int)(*iter)->uid;
@@ -628,11 +640,16 @@ public:
       roi.y = (*iter)->objectROI.y;
       roi.width = (*iter)->objectROI.width;
       roi.height = (*iter)->objectROI.height;
+
+      ++iter;
+
       // ROS_WARN("OBJECT ROIIII Box = %d %d %d %d", roi.x, roi.y, roi.height, roi.width);
       rois.rois.push_back(roi);
       humans.entries.push_back(entry);
-      ++iter;
     }
+
+
+
 
     // publish messages
     human_tracker_data_.publish(humans);
@@ -761,7 +778,7 @@ public:
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "HaarSvm");
+  ros::init(argc, argv, "ObjectTrackingNode");
   ros::NodeHandle n;
   ObjectTrackingNode HN(n);
   ros::spin();

@@ -6,16 +6,19 @@
     <!-- <include file="$(find openni_launch)/launch/openni.launch"/>  -->
     
     <!-- ### Set the visualization parameter ### -->
-    <arg name="visual" default="false"/>
+    <arg name="visual" default="true"/>
 	<param name="visualization/ptcloud" type="bool" value="$(arg visual)" />
 
 
     <!-- <node pkg="nodelet" type="nodelet" name="standalone" args="load depth_image_proc/point_cloud_xyzrgb"></node> -->
+    
+    <!-- Run tf -->
+    <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 -0.5 0.5 -0.5 0.5 camera_rgb_frame camera_rgb_optical_frame 30" />
 
     <!-- Launch consisteny node -->
     <node pkg="consistency" type="consistency_node" name="consistency">
         <!-- mode = {accumulate,load} -->
-        <param name="Q_Size" value="2" />
+        <param name="Q_Size" value="10" />
         <param name="UseDefaultRois" type="bool" value="true" />
         <param name="mode" type="string" value="load"/>
         <param name="label" 	 type="int"    value="1"  />
@@ -24,18 +27,22 @@
         <remap from="input_rois" to="output_rois" />
         <remap from="Color_Image" to="/camera/rgb/image_color" />
         <remap from="Disparity_Image" to="/camera/depth_registered/disparity" />
+        <remap from="Depth_Image" to="/camera/depth_registered/image" />
+        
         <remap from="PtCloud" to="/camera/depth_registered/points" />
         <param name="Kinect_Disparity_Fix" value="false"/>
     </node>
     
     <!-- Launch HaarAda Node-->
     <node name="HaarAdaNode" pkg="HaarAda" type="HaarAda174"  >	
-        <param name="Q_Size" value="2" />
+        <param name="Q_Size" value="10" />
         <param name="RemoveOverlappingRois" type="bool" value="true" />
         <remap from="Color_Image" to="ConsistencyColorImage"/>	
         <remap from="Disparity_Image" to="ConsistencyDisparityImage"/>
         <remap from="PtCloud" to="ConsistencyPtcloud" />
         <remap from="input_rois" to="ConsistencyOutputRois"/>
+        <remap from="Depth_Image" to="ConsistencyDepthImage" />
+
         <!--mode={detect,train,load,accumulate} -->
         <param name="mode" value="load"/>
         <param name="classifier_file" value="$(env NIST_CLASSIFIERS)/$(arg classifierDir)/HaarAda.xml"/>
@@ -46,11 +53,13 @@
     
     <!-- Launch HaarDispAda Node-->
     <node name="HaarDispAdaNode" pkg="HaarDispAda" type="HaarDispAda174" >	
-        <param name="Q_Size" value="2" />
+        <param name="Q_Size" value="10" />
         <remap from="Color_Image" to="HaarAdaColorImage"/>	
         <remap from="Disparity_Image" to="HaarAdaDisparityImage"/>
         <remap from="PtCloud" to="HaarAdaPtcloud" />
+        <remap from="Depth_Image" to="HaarAdaDepthImage" />
         <remap from="input_rois" to="HaarAdaOutputRois"/>
+        
         <!-- mode={detect,train,load,accumulate} -->
         <param name="mode" value="load"/>
         <param name="classifier_file" value="$(env NIST_CLASSIFIERS)/$(arg classifierDir)/HaarDispAda.xml"/>
@@ -63,10 +72,11 @@
     
     <!-- Launch HaarSvm Node-->
     <node name="HaarSvmNode" pkg="HaarSvm" type="HaarSvm8" >	  
-        <param name="Q_Size" value="2" />
+        <param name="Q_Size" value="10" />
         <remap from="Color_Image" to="HaarDispAdaColorImage"/>	
         <remap from="Disparity_Image" to="HaarDispAdaDisparityImage"/>
         <remap from="PtCloud" to="HaarDispAdaPtcloud" />
+        <remap from="Depth_Image" to="HaarDispAdaDepthImage" />
         <remap from="input_rois" to="HaarDispAdaOutputRois"/>
         <!-- mode={detect,train,load,accumulate} -->
         <param name="mode" value="load"/>
@@ -77,11 +87,12 @@
     
     
     <!-- Launch HogSvm Node-->
-    <node name="HogSvmNode" pkg="HogSvm" type="HogSvm1" >	
-        <param name="Q_Size" value="2" />
+    <node name="HogSvmNode" pkg="HogSvm" type="HogSvm1" output="screen">	
+        <param name="Q_Size" value="10" />
         <remap from="Color_Image" to="HaarSvmColorImage"/>	
         <remap from="Disparity_Image" to="HaarSvmDisparityImage"/>
         <remap from="PtCloud" to="HaarSvmPtcloud" />
+        <remap from="Depth_Image" to="HaarSvmDepthImage" />
         <remap from="input_rois" to="HaarSvmOutputRois"/>
         <!-- mode={detect,train,load,accumulate} -->
         <param name="mode" value="load"/>
@@ -92,17 +103,11 @@
         <param name="HogSvmThreshold" value="0.2"/>
     </node> 
     
-    <!-- display the rois -->
-    <!-- <node pkg="roiViewer" type="roiViewer_node" name="HaarAdaViewer" >
-        <param name="mode" type="string" value="roi_display"/> 
-        <param name="label" type="int" value="1" />
-        <remap from ="input_image" to="HogSvmColorImage"/>
-        <remap from ="input_rois" to="HogSvmOutputRois"/>  
-    </node> -->
+
     
     <!-- Launch Tracking Node-->
     <node name="TrackNode" pkg="object_tracking" type="object_tracking_node" output="screen">	
-        <param name="Q_Size" value="2" />
+        <param name="Q_Size" value="10" />
         <remap from="Color_Image" to="HogSvmColorImage"/>	
         <remap from="Disparity_Image" to="HogSvmDisparityImage"/>
         <remap from="PtCloud" to="HogSvmPtcloud" />
@@ -135,7 +140,7 @@
 
         <!-- <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 -0.5 0.5 -0.5 0.5  world camera_rgb_optical_frame 30" /> -->
         
-        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find visualize_bbox)/rviz/visualize.rviz" />
+        <!-- <node type="rviz" name="rviz" pkg="rviz" args="-d $(find visualize_bbox)/rviz/visualize.rviz" /> -->
         
         <node name="VisualizeBboxNode" pkg="visualize_bbox" type="visualize_bbox_node" output="screen"> 
             <remap from="PtCloud" to="ObjTrackingPtcloud" />
@@ -143,7 +148,7 @@
         </node>
     </group>
     
-    <node name="FindDistanceNode" pkg="find_distance" type="find_distance_node" output="screen"> </node>
+    <!-- <node name="FindDistanceNode" pkg="find_distance" type="find_distance_node" output="screen"> </node> -->
 
     <!-- <node name="DatasetTestingNode" pkg="dataset_testing" type="dataset_testing_node" output="screen"></node> -->
 

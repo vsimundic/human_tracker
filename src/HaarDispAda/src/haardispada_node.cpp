@@ -104,13 +104,14 @@ class HaarDispAdaNode {
   message_filters::Subscriber<Image> sub_image_;
   message_filters::Subscriber<Rois> sub_rois_;
   message_filters::Subscriber<PointCloud2> sub_ptcloud_;
+  message_filters::Subscriber<Image> sub_depth_;
 
   // Define the Synchronizer
-  typedef ApproximateTime<Image, DisparityImage, Rois> ApproximatePolicy;
+  typedef ApproximateTime<Image, DisparityImage, Rois, Image> ApproximatePolicy;
   typedef message_filters::Synchronizer<ApproximatePolicy> ApproximateSync;
   boost::shared_ptr<ApproximateSync> approximate_sync_;
 
-  typedef ApproximateTime<Image, DisparityImage, Rois, PointCloud2>
+  typedef ApproximateTime<Image, DisparityImage, Rois, PointCloud2, Image>
       ApproximatePolicyWithPtcloud;
   typedef message_filters::Synchronizer<ApproximatePolicyWithPtcloud>
       ApproximateSyncWithPtcloud;
@@ -121,6 +122,8 @@ class HaarDispAdaNode {
   ros::Publisher pub_Color_Image_;
   ros::Publisher pub_Disparity_Image_;
   ros::Publisher pub_Ptcloud;
+  ros::Publisher pub_Depth_Image_;
+
 
   Rois output_rois_;
 
@@ -164,13 +167,15 @@ class HaarDispAdaNode {
     // Published Messages
     pub_rois_ = node_.advertise<Rois>("HaarDispAdaOutputRois", qs);
     pub_Color_Image_ = node_.advertise<Image>("HaarDispAdaColorImage", qs);
-    pub_Disparity_Image_ =
-        node_.advertise<DisparityImage>("HaarDispAdaDisparityImage", qs);
+    pub_Disparity_Image_ = node_.advertise<DisparityImage>("HaarDispAdaDisparityImage", qs);
+    pub_Depth_Image_ = node_.advertise<Image>("HaarDispAdaDepthImage", qs);
 
     // Subscribe to Messages
     sub_image_.subscribe(node_, "Color_Image", qs);
     sub_disparity_.subscribe(node_, "Disparity_Image", qs);
     sub_rois_.subscribe(node_, "input_rois", qs);
+    sub_depth_.subscribe(node_, "Depth_Image", qs);
+
 
     // Check visualization param
     node_.param("/visualization/ptcloud", visualize_flag, false);
@@ -182,15 +187,15 @@ class HaarDispAdaNode {
     // Sync the Synchronizer
     if (!visualize_flag) {
       approximate_sync_.reset(new ApproximateSync(
-          ApproximatePolicy(qs), sub_image_, sub_disparity_, sub_rois_));
+          ApproximatePolicy(qs), sub_image_, sub_disparity_, sub_rois_, sub_depth_));
       approximate_sync_->registerCallback(
-          boost::bind(&HaarDispAdaNode::realCallback, this, _1, _2, _3));
+          boost::bind(&HaarDispAdaNode::realCallback, this, _1, _2, _3, _4));
     } else {
       approximate_sync_with_ptcloud_.reset(new ApproximateSyncWithPtcloud(
           ApproximatePolicyWithPtcloud(qs), sub_image_, sub_disparity_,
-          sub_rois_, sub_ptcloud_));
+          sub_rois_, sub_ptcloud_, sub_depth_));
       approximate_sync_with_ptcloud_->registerCallback(boost::bind(
-          &HaarDispAdaNode::realCallbackWithPtcloud, this, _1, _2, _3, _4));
+          &HaarDispAdaNode::realCallbackWithPtcloud, this, _1, _2, _3, _4, _5));
     }
   }
   int get_mode() {
@@ -215,7 +220,7 @@ class HaarDispAdaNode {
   }
   void imageCb(const ImageConstPtr& image_msg,
                const DisparityImageConstPtr& disparity_msg,
-               const RoisConstPtr& rois_msg) {
+               const RoisConstPtr& rois_msg, const ImageConstPtr& depth_msg) {
     bool label_all;
     vector<int> L_in;
     vector<int> L_out;
@@ -307,6 +312,8 @@ class HaarDispAdaNode {
         pub_rois_.publish(output_rois_);
         pub_Color_Image_.publish(image_msg);
         pub_Disparity_Image_.publish(disparity_msg);
+        pub_Depth_Image_.publish(depth_msg);
+
         break;
       case ACCUMULATE:
         numSamples = HDAC_.addToTraining(R_in, L_in, dmatrix);
@@ -393,15 +400,15 @@ class HaarDispAdaNode {
 
   void realCallback(const ImageConstPtr& image_msg,
                     const DisparityImageConstPtr& disparity_msg,
-                    const RoisConstPtr& rois_msg) {
-    imageCb(image_msg, disparity_msg, rois_msg);
+                    const RoisConstPtr& rois_msg, const ImageConstPtr& depth_msg) {
+    imageCb(image_msg, disparity_msg, rois_msg, depth_msg);
   }
 
   void realCallbackWithPtcloud(
       const ImageConstPtr& image_msg,
       const DisparityImageConstPtr& disparity_msg, const RoisConstPtr& rois_msg,
-      const sensor_msgs::PointCloud2ConstPtr& cloud_msg) {
-    imageCb(image_msg, disparity_msg, rois_msg);
+      const sensor_msgs::PointCloud2ConstPtr& cloud_msg, const ImageConstPtr& depth_msg) {
+    imageCb(image_msg, disparity_msg, rois_msg, depth_msg);
     pub_Ptcloud.publish(cloud_msg);
   }
 

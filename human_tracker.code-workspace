@@ -1,0 +1,28 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"hash_map": "cpp",
+			"hash_set": "cpp",
+			"iostream": "cpp",
+			"array": "cpp",
+			"string": "cpp",
+			"string_view": "cpp",
+			"ostream": "cpp",
+			"bitset": "cpp",
+			"initializer_list": "cpp",
+			"utility": "cpp",
+			"deque": "cpp",
+			"vector": "cpp"
+		},
+		"python.autoComplete.extraPaths": [
+			"/home/valentin/FAKS/HDR/human_tracker/devel/lib/python2.7/dist-packages",
+			"/home/valentin/FAKS/HDR/openni_kinect/devel/lib/python2.7/dist-packages",
+			"/opt/ros/melodic/lib/python2.7/dist-packages"
+		]
+	}
+}
